@@ -62,13 +62,15 @@ while(1):
 cv.destroyAllWindows()   
 ```
 
+状态：100%
+
 
 
 - [Core Operations](https://docs.opencv.org/4.5.2/d7/d16/tutorial_py_table_of_contents_core.html)
 
   In this section you will learn basic operations on image like pixel editing, geometric transformations, code optimization, some mathematical tools etc.
 
-
+状态：10% 刚开始basic operation
 
 
 
