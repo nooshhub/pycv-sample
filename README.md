@@ -2,13 +2,27 @@
 
 ## 学习记录
 
+[Code Cheat Sheet](CodeCheatSheet.md)
+
+
+
+## 参考官方教程
+
 - [Introduction to OpenCV](https://docs.opencv.org/4.5.2/da/df6/tutorial_py_table_of_contents_setup.html)
 
   Learn how to setup OpenCV-Python on your computer!
 
   直接用anaconda，跳过
 
-  
+  入门Py常用资料：
+
+1. A Quick guide to Python - [A Byte of Python](http://swaroopch.com/notes/python/)
+2. [NumPy Quickstart tutorial](https://numpy.org/devdocs/user/quickstart.html)
+3. [NumPy Reference](https://numpy.org/devdocs/reference/index.html#reference)
+4. [OpenCV Documentation](http://docs.opencv.org/)
+5. [OpenCV Forum](https://forum.opencv.org/)
+
+
 
 - [Gui Features in OpenCV](https://docs.opencv.org/4.5.2/dc/d4d/tutorial_py_table_of_contents_gui.html)
 
@@ -18,51 +32,7 @@
 
   ~~我们还可以尝试添加更多的空例如，重置按钮，预处理展示按钮，也就是不同的模式了。Button需要QT，直接放弃，安装QT很耗时~~
   
-  那就将图片预处理了，保存下来，然后我们基于预处理的图片进行操作
-
-```python
-import cv2 as cv
-import numpy as np
-
-
-def renderImage(x):
-    copyOfImg = img.copy()
-
-    # get curren positions trackbars
-    RR_radius = cv.getTrackbarPos('RR_radius', 'Partition')
-    RR_thickness = cv.getTrackbarPos('RR_thickness', 'Partition')
-    cv.rectangle(copyOfImg, (0,0), (RR_radius, RR_radius), (255, 0, 0), RR_thickness, cv.LINE_AA)
-    cv.imshow('Partition', copyOfImg)
-
-
-def nothing(x):
-    pass
-    
-# load image, create a widnow
-img = cv.imread('partition2.png')
-cv.namedWindow('Partition')
-
-# cteate trackbars RR radius changes
-# RR radius for draw rectangle
-cv.createTrackbar('RR_radius', 'Partition', 250, 500, renderImage)
-# RR radius line's tickness
-cv.createTrackbar('RR_thickness', 'Partition', 1, 3, renderImage)
-
-
-# init show image
-renderImage(-1)
-
-
-# loop until use press ESC
-while(1):
-    k = cv.waitKey(100) & 0xFF
-    if k == 27:
-        break
-    
-cv.destroyAllWindows()   
-```
-
-状态：100%
+  那就将图片预处理了，保存下来，然后我们基于预处理的图片进行操作状态：100%
 
 
 
@@ -70,7 +40,7 @@ cv.destroyAllWindows()
 
   In this section you will learn basic operations on image like pixel editing, geometric transformations, code optimization, some mathematical tools etc.
 
-状态：10% 刚开始basic operation
+状态：20% 必须掌握 numpy matplotlib
 
 
 
