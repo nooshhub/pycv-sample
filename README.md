@@ -1,8 +1,42 @@
 # OpenCV-Python Tutorials 
 
-## 学习记录
+
+
+## 安装
+
+anaconda全家桶
+
+安装 
+
+opencv-python                      
+
+opencv-contrib-python
+
+设置jupyter-notebook的root为我们的代码根目录，在jupyter启动的快捷方式里修改 目标
+
+启动jupyter开始欢快的玩耍！
+
+
+
+## 代码笔记
+
+[编码规范](https://www.runoob.com/w3cnote/google-python-styleguide.html)
 
 [Code Cheat Sheet](CodeCheatSheet.md)
+
+[1GuiFeaturesTrackBar.ipynb](http://localhost:8888/notebooks/1GuiFeaturesTrackBar.ipynb)
+
+[2Core.ipynb](http://localhost:8888/notebooks/2Core.ipynb)
+
+[3ImageProcessCannyEdges.ipynb](http://localhost:8888/notebooks/3ImageProcessCannyEdges.ipynb)
+
+[3ImageProcessMorphological.ipynb](http://localhost:8888/notebooks/3ImageProcessMorphological.ipynb)
+
+[3ImageProcessTemplateMatch.ipynb](http://localhost:8888/notebooks/3ImageProcessTemplateMatch.ipynb)
+
+[3ImageProcessThresholdSmooth.ipynb](http://localhost:8888/notebooks/3ImageProcessThresholdSmooth.ipynb)
+
+[3ImageProcessWaterSehed.ipynb](http://localhost:8888/notebooks/3ImageProcessWaterSehed.ipynb)
 
 
 
