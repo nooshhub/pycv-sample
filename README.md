@@ -20,6 +20,8 @@ opencv-contrib-python
 
 ## 代码笔记
 
+6-16 开始按照官网的教程来用python实现需求3，适当了解一些基本的python语法
+
 [编码规范](https://www.runoob.com/w3cnote/google-python-styleguide.html)
 
 [Code Cheat Sheet](CodeCheatSheet.md)
@@ -37,6 +39,14 @@ opencv-contrib-python
 [3ImageProcessThresholdSmooth.ipynb](http://localhost:8888/notebooks/3ImageProcessThresholdSmooth.ipynb)
 
 [3ImageProcessWaterSehed.ipynb](http://localhost:8888/notebooks/3ImageProcessWaterSehed.ipynb)
+
+
+
+6-19 出基本成果 python YYDS
+
+[Partition2ShootingStar.ipynb](http://localhost:8888/notebooks/Partition2ShootingStar.ipynb)
+
+还有些bug，不过冷热分区，合并分区到同一个冷热分区的初步架子已经成型。
 
 
 
