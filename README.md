@@ -76,7 +76,9 @@ opencv-contrib-python
 
   ~~我们还可以尝试添加更多的空例如，重置按钮，预处理展示按钮，也就是不同的模式了。Button需要QT，直接放弃，安装QT很耗时~~
   
-  那就将图片预处理了，保存下来，然后我们基于预处理的图片进行操作状态：100%
+  那就将图片预处理了，保存下来，然后我们基于预处理的图片进行操作
+  
+  状态：100%
 
 
 
@@ -84,7 +86,7 @@ opencv-contrib-python
 
   In this section you will learn basic operations on image like pixel editing, geometric transformations, code optimization, some mathematical tools etc.
 
-状态：20% 必须掌握 numpy matplotlib
+状态：100% 必须掌握 numpy matplotlib
 
 
 
@@ -92,7 +94,11 @@ opencv-contrib-python
 
   In this section you will learn different image processing functions inside OpenCV.
 
+状态：100%
 
+![partition1 success](partition1hotcold.png)
+
+![partition2 still have bugs](partition2hotcoldWithBugs.png)
 
 - [Feature Detection and Description](https://docs.opencv.org/4.5.2/db/d27/tutorial_py_table_of_contents_feature2d.html)
 
@@ -121,3 +127,4 @@ opencv-contrib-python
 - [OpenCV-Python Bindings](https://docs.opencv.org/4.5.2/df/da2/tutorial_py_table_of_contents_bindings.html)
 
   In this section, we will see how OpenCV-Python bindings are generated 
+
