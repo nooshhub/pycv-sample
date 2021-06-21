@@ -6,13 +6,37 @@
 
 anaconda全家桶
 
+
+
+国内镜像加速
+
+https://blog.csdn.net/sinat_21591675/article/details/82770360
+
+用阿里的
+
+
+
+使用pip之前新建一个C:\Users\lenovo\pip\pip.ini
+
+[global]
+
+index-url = http://mirrors.aliyun.com/pypi/simple/
+
+[install]
+
+trusted-host = mirrors.aliyun.com
+
+
+
 安装 
 
-opencv-python                      
+pip install opencv-python==4.5.1.48
 
-opencv-contrib-python
+pip install opencv-contrib-python==4.5.1.48
 
 设置jupyter-notebook的root为我们的代码根目录，在jupyter启动的快捷方式里修改 目标
+
+![设置jupyter-notebook的root为我们的代码根目录](image-md/jupytor-root.png)
 
 启动jupyter开始欢快的玩耍！
 
