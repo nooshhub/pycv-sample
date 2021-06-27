@@ -48,21 +48,21 @@ pip install opencv-contrib-python==4.5.1.48
 
 [编码规范](https://www.runoob.com/w3cnote/google-python-styleguide.html)
 
-[Code Cheat Sheet](CodeCheatSheet.md)
+[Code Cheat Sheet](opencv-tutorial-md/CodeCheatSheet.md)
 
-[1GuiFeaturesTrackBar.ipynb](http://localhost:8888/notebooks/1GuiFeaturesTrackBar.ipynb)
+[1GuiFeaturesTrackBar.ipynb](http://localhost:8888/notebooks/opencv-tutorial-md/1GuiFeaturesTrackBar.ipynb)
 
-[2Core.ipynb](http://localhost:8888/notebooks/2Core.ipynb)
+[2Core.ipynb](http://localhost:8888/notebooks/opencv-tutorial-md/2Core.ipynb)
 
-[3ImageProcessCannyEdges.ipynb](http://localhost:8888/notebooks/3ImageProcessCannyEdges.ipynb)
+[3ImageProcessCannyEdges.ipynb](http://localhost:8888/notebooks/opencv-tutorial-md/3ImageProcessCannyEdges.ipynb)
 
-[3ImageProcessMorphological.ipynb](http://localhost:8888/notebooks/3ImageProcessMorphological.ipynb)
+[3ImageProcessMorphological.ipynb](http://localhost:8888/notebooks/opencv-tutorial-md/3ImageProcessMorphological.ipynb)
 
-[3ImageProcessTemplateMatch.ipynb](http://localhost:8888/notebooks/3ImageProcessTemplateMatch.ipynb)
+[3ImageProcessTemplateMatch.ipynb](http://localhost:8888/notebooks/opencv-tutorial-md/3ImageProcessTemplateMatch.ipynb)
 
-[3ImageProcessThresholdSmooth.ipynb](http://localhost:8888/notebooks/3ImageProcessThresholdSmooth.ipynb)
+[3ImageProcessThresholdSmooth.ipynb](http://localhost:8888/notebooks/opencv-tutorial-md/3ImageProcessThresholdSmooth.ipynb)
 
-[3ImageProcessWaterSehed.ipynb](http://localhost:8888/notebooks/3ImageProcessWaterSehed.ipynb)
+[3ImageProcessWaterSehed.ipynb](http://localhost:8888/notebooks/opencv-tutorial-md/3ImageProcessWaterSehed.ipynb)
 
 
 
@@ -151,4 +151,32 @@ pip install opencv-contrib-python==4.5.1.48
 - [OpenCV-Python Bindings](https://docs.opencv.org/4.5.2/df/da2/tutorial_py_table_of_contents_bindings.html)
 
   In this section, we will see how OpenCV-Python bindings are generated 
+
+
+
+## 框架 Tensorflow/Keras/PyTorch
+
+看看这些DL的框架能不能有些帮助，貌似都在做预测和分类识别，对目前的需求没有，可能后期的OCR会有帮助，就是做识别的。
+
+[Tensorflow2](tensorflow/Tensorflow2.md)
+
+[手撸神经网络](https://www.bilibili.com/video/BV1m4411x7KU/?spm_id_from=333.788.recommend_more_video.5)，有利于全局的理解神经网络和熟悉numpy的高级用法
+
+[Keras](tensorflow/Keras.md)
+
+[Keras英语视频 练习相关专业的口语和听力](https://www.bilibili.com/video/BV1g64y1S7Kz/?spm_id_from=333.788.recommend_more_video.1)
+
+[PyTorch](tensorflow/PyTorch.md)
+
+
+
+
+
+## road detection/ Extract road from map / aerial image / satellite image
+
+https://stackoverflow.com/questions/62623836/simple-way-to-detect-street-area-in-google-map-images-aerial-images
+
+https://www.cs.toronto.edu/~hinton/absps/road_detection.pdf
+
+https://towardsdatascience.com/satellite-coasts-detection-model-with-python-and-opencv-28d1b4b8474e
 
