@@ -68,7 +68,7 @@ pip install opencv-contrib-python==4.5.1.48
 
 6-19 出基本成果 python YYDS
 
-[Partition2ShootingStar.ipynb](http://localhost:8888/notebooks/Partition2ShootingStar.ipynb)
+[Partition2ShootingStar.ipynb](http://localhost:8888/notebooks/hotcold/Partition2ShootingStar.ipynb)
 
 还有些bug，不过冷热分区，合并分区到同一个冷热分区的初步架子已经成型。
 
@@ -120,9 +120,9 @@ pip install opencv-contrib-python==4.5.1.48
 
 状态：100%
 
-![partition1 success](partition1hotcold.png)
+![partition1 success](hotcold/partition1hotcold.png)
 
-![partition2 still have bugs](partition2hotcoldWithBugs.png)
+![partition2 still have bugs](hotcold/partition2hotcoldWithBugs.png)
 
 - [Feature Detection and Description](https://docs.opencv.org/4.5.2/db/d27/tutorial_py_table_of_contents_feature2d.html)
 
@@ -172,7 +172,49 @@ pip install opencv-contrib-python==4.5.1.48
 
 
 
+## 输出地块色块面积和父子关系
+
+```json
+{
+    "area":50000, /*最外面的是总面积*/
+    "data":[ /*data是地块的信息*/
+        {
+            "area":330,
+            "color":"(255,255,255)",
+            "points":[
+                {
+                    "xAxis":22.4,
+                    "yAxis":44.34
+                }
+            ],
+            "children":[ /*children是色块的信息*/
+                {
+                    "area":330,
+                    "color":"(255,255,255)",
+                    "points":[
+                        {
+                            "xAxis":22.4,
+                            "yAxis":44.34
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+```
+
+<img src="image-md\bock-sample.png" alt="image-20210627121101413" style="zoom:50%;" />
+
+比如蓝色框出来的就是地块
+
+然后绿色框出来的是色块
+
+
+
 ## road detection/ Extract road from map / aerial image / satellite image
+
+回到道路检测的问题上来
 
 https://stackoverflow.com/questions/62623836/simple-way-to-detect-street-area-in-google-map-images-aerial-images
 
