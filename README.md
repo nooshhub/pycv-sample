@@ -212,6 +212,20 @@ pip install opencv-contrib-python==4.5.1.48
 
 
 
+学习opencv3中文版 
+
+第14章 轮廓  canny是布尔矩阵 findContours将canny的布尔矩阵转换成坐标形式的矩阵
+
+307 - Canny 的threashold怎么计算 
+
+
+
+图像处理、分析与机器视觉  
+
+全部
+
+
+
 ## road detection/ Extract road from map / aerial image / satellite image
 
 回到道路检测的问题上来
