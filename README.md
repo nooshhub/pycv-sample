@@ -218,7 +218,9 @@ pip install opencv-contrib-python==4.5.1.48
 
 307 - Canny 的threashold怎么计算 
 
+https://www.bilibili.com/video/BV1QJ411W7SS?p=45
 
+https://www.bilibili.com/video/BV1QJ411W7SS?p=46
 
 图像处理、分析与机器视觉  
 
