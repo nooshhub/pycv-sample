@@ -3,11 +3,13 @@ def print_hi(name):
                           'rgb_label': '黄', 'h_range': [26, 34], 's_range': [43, 255], 'v_range': [46, 255]
                           },
                          {'label': '办公', 'rgb': (250, 0, 250),
-                          'rgb_label': '紫红', 'h_range': [156, 180], 's_range': [43, 255], 'v_range': [46, 255]
+                          'rgb_label': '紫红', 'h_range': [125, 155], 's_range': [43, 255], 'v_range': [46, 255]
                           },
                          {'label': '商业', 'rgb': (250, 9, 9),
-                          'rgb_label': '红', 'h_range': [0, 10], 'h_x_range': [156, 180], 's_range': [43, 255],
-                          'v_range': [46, 255]
+                          'rgb_label': '红', 'h_range': [0, 10], 's_range': [43, 255], 'v_range': [46, 255]
+                          },
+                         {'label': '商业2', 'rgb': (249, 9, 15),
+                          'rgb_label': '红', 'h_range': [156, 180], 's_range': [43, 255], 'v_range': [46, 255]
                           },
                          {'label': '工业', 'rgb': (201, 103, 39),
                           'rgb_label': '棕', 'h_range': [11, 25], 's_range': [43, 255], 'v_range': [46, 255]
