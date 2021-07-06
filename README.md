@@ -238,3 +238,46 @@ https://www.cs.toronto.edu/~hinton/absps/road_detection.pdf
 
 https://towardsdatascience.com/satellite-coasts-detection-model-with-python-and-opencv-28d1b4b8474e
 
+
+
+
+
+## 按照颜色提取思路
+
+根据分割线的颜色，找出图上画好的蓝色分割线的点，生成一张和原图大小一样的mask，然后可以是fillConvexPoly填充为roi mask，
+
+也可以是[poylines](https://docs.opencv.org/3.4/dc/da5/tutorial_py_drawing_functions.html)  这样抠图，提取轮廓都是可以的
+
+分割线的设定也可以很好的用来将图片分割和分类，不同的分割线可以代表不同的作用
+
+
+
+颜色除了当线条使用，还可以当作roi来使用，inRange(src, lower, upper),轻松得到一个roi的mask
+
+
+
+还可以尝试[comparehist](https://docs.opencv.org/3.4/d8/dc8/tutorial_histogram_comparison.html)
+
+
+
+## RESTAPI
+
+[fastapi](https://fastapi.tiangolo.com/zh/) python界的springboot
+
+由于默认conda环境装的东西太多了，我们新建一个venv，[参考](https://zhuanlan.zhihu.com/p/141122337)
+
+todo：我们自己的安装命令流程
+
+
+
+接口文档：
+
+http://127.0.0.1:8000/docs
+
+http://127.0.0.1:8000/redoc
+
+todo：如何添加注释到swagger里
+
+
+
+todo：继续学习fastapi 示例升级，并且将以上问题完善
