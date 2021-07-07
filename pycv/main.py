@@ -1,14 +1,18 @@
-from typing import Optional
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
-app = FastAPI()
+from dependencies import get_query_token
+from internal import admin
+from routers import items, users
+from mtfile import mtfile_manager
+
+app = FastAPI(dependencies=[Depends(get_query_token)])
+
+app.include_router(users.router)
+app.include_router(items.router)
+app.include_router(admin.router)
+app.include_router(mtfile_manager.router)
 
 
 @app.get("/")
-def read_root():
-    return {"hello": "world"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
+async def root():
+    return {"message": "Hello Bigger Applications!"}

@@ -264,9 +264,54 @@ https://towardsdatascience.com/satellite-coasts-detection-model-with-python-and-
 
 [fastapi](https://fastapi.tiangolo.com/zh/) python界的springboot
 
+### 开发环境准备：
+
 由于默认conda环境装的东西太多了，我们新建一个venv，[参考](https://zhuanlan.zhihu.com/p/141122337)
 
-todo：我们自己的安装命令流程
+```
+conda create --name mtcv python=3.9 
+activate mtcv
+conda env list
+conda activate mtcv
+```
+
+
+
+#### 手动安装依赖：
+
+我们自己的安装命令流程
+
+```
+pip install fastapi uvicorn python-multipart opencv-python==4.5.1.48 opencv-contrib-python==4.5.1.48
+
+# 启动
+uvicorn main:app --reload
+```
+
+### docker
+
+[参考](https://fastapi.tiangolo.com/zh/deployment/docker/)
+
+```
+FROM python:3.9
+
+RUN pip install fastapi uvicorn python-multipart opencv-python==4.5.1.48 opencv-contrib-python==4.5.1.48
+
+EXPOSE 80
+
+COPY ./app /app
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+
+
+```
+
+
+
+```
+docker build -t pycv .
+docker run -d --name pycv -p 80:80 pycv
+```
 
 
 
@@ -275,9 +320,3 @@ todo：我们自己的安装命令流程
 http://127.0.0.1:8000/docs
 
 http://127.0.0.1:8000/redoc
-
-todo：如何添加注释到swagger里
-
-
-
-todo：继续学习fastapi 示例升级，并且将以上问题完善
