@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-from mt_file import mt_file_manager
+from mt_cv import mt_cv_api
 
 app = FastAPI()
-app.include_router(mt_file_manager.router)
+app.include_router(mt_cv_api.router)
 
 
 @app.get("/")
