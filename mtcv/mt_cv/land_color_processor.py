@@ -191,9 +191,15 @@ def process(img_path):
     copy = land_region.copy()
     land_cnts = find_all_land_contours(copy)
 
+    e1 = cv.getTickCount()
+
     # 通过颜色来检测地块内色块
     # land_dict = find_color_regions_for_all_lands(img_white_bg, land_cnts, debug=True, debugLen=1)
     land_dict = find_color_regions_for_all_lands(img_white_bg, land_cnts)
+
+    e2 = cv.getTickCount()
+    time = (e2 - e1) / cv.getTickFrequency()
+    print('takes ', time)
 
     return land_dict
 
