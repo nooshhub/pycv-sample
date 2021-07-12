@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter
 from mt_cv import land_color_processor as lcp
 
 router = APIRouter(
