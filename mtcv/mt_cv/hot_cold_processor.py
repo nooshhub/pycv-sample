@@ -331,6 +331,7 @@ def main():
     src = cv.imread('../images/id1/id1.png')
 
     # resize有助于提升处理速度
+    # TODO 测试不同像素的处理速度
     src = image_util.resize_img(src)
     # 填充为正方形
     squared_img = generate_square_img(src)
