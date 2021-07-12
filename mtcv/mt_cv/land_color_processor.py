@@ -2,6 +2,7 @@ import numpy as np
 import cv2 as cv
 import json
 from mt_cv import color_data, image_util
+import os
 
 
 def find_roi_contours(src):
@@ -152,7 +153,8 @@ def find_land_region(img_white_bg):
     Args:
         img_white_bg: 输入图片
     """
-    img = cv.imread('D:\opencv\pynotebook\contour-hierarchy\data_hierarchy2.png')
+    roi_img_path = os.path.abspath('../images/id1/id1_roi.png')
+    img = cv.imread(roi_img_path)
     # TODO 找出最大的是总地块，目前将图片按照轮廓排序，取最大面积的
     sorted_cnts = find_roi_contours(img)
     root_region = image_util.get_roi_by_contour(img_white_bg, sorted_cnts[0])
@@ -197,7 +199,7 @@ def process(img_path):
 
 
 def main():
-    img_path = 'D:\opencv\pynotebook\contour-hierarchy\data_hierarchy1.png'
+    img_path = '../images/id1/id1_part.png'
     land_dict = process(img_path)
     jsonData = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
     print(jsonData)

@@ -13,13 +13,13 @@ async def land_color(img_path: str):
 
     Args:
         img_path: 图片路径
-        TODO 假设img_path是id1/id1.png
+        TODO 假设img_path是/id1/id1.png
     Returns:
         地块与色块信息
 
     Raises:
     """
-    land_dict = lcp.process(img_path)
+    land_dict = lcp.process('../images' + img_path)
 
     return {
         # "direction": 'N',
