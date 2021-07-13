@@ -207,8 +207,8 @@ def process(img_path):
 def main():
     img_path = '../images/id1/id1_part.png'
     land_dict = process(img_path)
-    jsonData = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
-    print(jsonData)
+    json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
+    print(json_data)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
