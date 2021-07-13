@@ -282,7 +282,7 @@ conda activate mtcv
 我们自己的安装命令流程
 
 ```
-pip install fastapi uvicorn python-multipart opencv-python==4.5.1.48 opencv-contrib-python==4.5.1.48
+pip install fastapi uvicorn opencv-python==4.5.1.48 opencv-contrib-python==4.5.1.48
 
 # 启动
 uvicorn main:app --reload
@@ -295,11 +295,11 @@ uvicorn main:app --reload
 ```
 FROM python:3.9
 
-RUN pip install fastapi uvicorn python-multipart opencv-python==4.5.1.48 opencv-contrib-python==4.5.1.48
+RUN pip install fastapi uvicorn opencv-python==4.5.1.48 opencv-contrib-python==4.5.1.48
 
 EXPOSE 80
 
-COPY ./app /app
+COPY ./ /app
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
 
@@ -320,3 +320,6 @@ docker run -d --name pycv -p 80:80 pycv
 http://127.0.0.1:8000/docs
 
 http://127.0.0.1:8000/redoc
+
+
+
