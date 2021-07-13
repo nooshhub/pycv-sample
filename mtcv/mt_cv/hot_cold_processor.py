@@ -17,13 +17,13 @@ def generate_square_img(src):
 
     """
     h, w = src.shape[0], src.shape[1]
-    topPad, bottomPad, leftPad, rightPad = 0, 0, 0, 0
+    top_pad, bottom_pad, left_pad, right_pad = 0, 0, 0, 0
     if h >= w:
-        rightPad = h - w
+        right_pad = h - w
     else:
-        bottomPad = w - h
+        bottom_pad = w - h
 
-    padding = [topPad, bottomPad, leftPad, rightPad]
+    padding = [top_pad, bottom_pad, left_pad, right_pad]
     # add additional padding 10px for each edge, so we can see axes clearly
     padding = [x + EXTRA_PADDING for x in padding]
     squared_img = cv.copyMakeBorder(src, padding[0], padding[1], padding[2], padding[3], cv.BORDER_CONSTANT,
@@ -40,7 +40,7 @@ def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False)
         copy_of_squared_img: a copy of squared image
         rr_radius: 功能半径
         start_coordinate: 起始位置
-        show_detail: True show bouding rect, RR label, blue RR line
+        show_detail: True show bounding rect, RR label, blue RR line
 
     """
     # getStartCoordinate for Axes
@@ -328,7 +328,10 @@ EXTRA_PADDING = 10
 
 def main():
     # 读取图片
-    src = cv.imread('../images/id1/id1.png')
+    img_abs_path = image_util.img_abs_path('/images/id1/id1.png')
+    print(img_abs_path)
+
+    src = cv.imread(img_abs_path)
 
     # resize有助于提升处理速度
     # TODO 测试不同像素的处理速度
