@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from mt_cv import land_color_processor as lcp
+from mt_cv import land_color_processor as lcp, image_util
 
 router = APIRouter(
     prefix="/mt/cv",
@@ -19,7 +19,7 @@ async def land_color(img_path: str):
 
     Raises:
     """
-    land_dict = lcp.process('../images' + img_path)
+    land_dict = lcp.process(image_util.img_abs_path('/images' + img_path))
 
     return {
         # "direction": 'N',

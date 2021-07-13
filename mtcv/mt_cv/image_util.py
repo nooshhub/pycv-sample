@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import config
 
 
 def resize_img(src, fixed_width=800):
@@ -105,3 +106,7 @@ def bgr_with_threshold(bgr, threshold):
             new_bgr.append(x + threshold)
 
     return new_bgr
+
+
+def img_abs_path(img_path):
+    return config.MTCV_HOME + img_path

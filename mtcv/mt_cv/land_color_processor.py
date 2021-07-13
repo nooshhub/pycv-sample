@@ -153,7 +153,7 @@ def find_land_region(img_white_bg):
     Args:
         img_white_bg: 输入图片
     """
-    roi_img_path = os.path.abspath('../images/id1/id1_roi.png')
+    roi_img_path = image_util.img_abs_path('/images/id1/id1_roi.png')
     img = cv.imread(roi_img_path)
     # TODO 找出最大的是总地块，目前将图片按照轮廓排序，取最大面积的
     sorted_cnts = find_roi_contours(img)
@@ -183,6 +183,9 @@ def process(img_path):
     Args:
         img_path: 图片路径
     """
+    if not os.path.isabs(img_path):
+        raise Exception('image path must be absolute')
+
     img_white_bg = cv.imread(img_path)
     land_region = find_land_region(img_white_bg)
     scale = find_scale(img_white_bg)
@@ -205,8 +208,11 @@ def process(img_path):
 
 
 def main():
-    img_path = '../images/id1/id1_part.png'
-    land_dict = process(img_path)
+    img_path = '/images/id1/id1_part.png'
+    print(image_util.img_abs_path(img_path))
+
+    land_dict = process(image_util.img_abs_path(img_path))
+
     json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
     print(json_data)
 
