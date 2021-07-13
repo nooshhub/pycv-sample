@@ -109,4 +109,33 @@ def bgr_with_threshold(bgr, threshold):
 
 
 def img_abs_path(img_path):
+    """图片绝对路径"""
     return config.MTCV_HOME + img_path
+
+
+def generate_square_img(src):
+    """将图片填充成正方形的
+
+    将图片填充成正方形的，方便我们使用功能半径去分割地块而不至于越界
+
+    Args:
+        src: 输入图像
+
+    Returns:
+        正方形图像
+
+    """
+    extra_padding = 10
+    h, w = src.shape[0], src.shape[1]
+    top_pad, bottom_pad, left_pad, right_pad = 0, 0, 0, 0
+    if h >= w:
+        right_pad = h - w
+    else:
+        bottom_pad = w - h
+
+    padding = [top_pad, bottom_pad, left_pad, right_pad]
+    # add additional padding 10px for each edge, so we can see axes clearly
+    padding = [x + extra_padding for x in padding]
+    squared_img = cv.copyMakeBorder(src, padding[0], padding[1], padding[2], padding[3], cv.BORDER_CONSTANT,
+                                    value=(255, 255, 255))
+    return squared_img

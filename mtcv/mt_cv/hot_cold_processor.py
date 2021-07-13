@@ -4,33 +4,6 @@ import sys
 from mt_cv import image_util
 
 
-def generate_square_img(src):
-    """将图片填充成正方形的
-
-    将图片填充成正方形的，方便我们使用功能半径去分割地块而不至于越界
-
-    Args:
-        src: 输入图像
-
-    Returns:
-        正方形图像
-
-    """
-    h, w = src.shape[0], src.shape[1]
-    top_pad, bottom_pad, left_pad, right_pad = 0, 0, 0, 0
-    if h >= w:
-        right_pad = h - w
-    else:
-        bottom_pad = w - h
-
-    padding = [top_pad, bottom_pad, left_pad, right_pad]
-    # add additional padding 10px for each edge, so we can see axes clearly
-    padding = [x + EXTRA_PADDING for x in padding]
-    squared_img = cv.copyMakeBorder(src, padding[0], padding[1], padding[2], padding[3], cv.BORDER_CONSTANT,
-                                    value=(255, 255, 255))
-    return squared_img
-
-
 def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False):
     """画出功能半径分割图
     RR square is render N*N squares on screen depends on the size of square image and RR radius.
@@ -48,29 +21,29 @@ def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False)
 
     # get curren positions trackbars
     rr_thickness = 4
-    maxSizeOfSrcImg = max(copy_of_squared_img.shape[0], copy_of_squared_img.shape[1])
-    numberOfRRPerRow = round(maxSizeOfSrcImg / rr_radius)
+    max_size_of_src_img = max(copy_of_squared_img.shape[0], copy_of_squared_img.shape[1])
+    number_of_rr_per_row = round(max_size_of_src_img / rr_radius)
 
-    RR_LineColor = (255, 0, 0) if show_detail else (255, 255, 255)
+    rr_line_color = (255, 0, 0) if show_detail else (255, 255, 255)
 
-    RR = np.zeros((numberOfRRPerRow, numberOfRRPerRow, 4), np.uint32)
+    RR = np.zeros((number_of_rr_per_row, number_of_rr_per_row, 4), np.uint32)
 
-    for row in range(numberOfRRPerRow):
-        for col in range(numberOfRRPerRow):
+    for row in range(number_of_rr_per_row):
+        for col in range(number_of_rr_per_row):
             # each start position
             # start point
-            x1 = EXTRA_PADDING + start_coordinate_x + col * rr_radius
-            y1 = EXTRA_PADDING + start_coordinate_y + row * rr_radius
+            x1 = start_coordinate_x + col * rr_radius
+            y1 = start_coordinate_y + row * rr_radius
             # end point
-            x2 = EXTRA_PADDING + start_coordinate_x + (col + 1) * rr_radius
-            y2 = EXTRA_PADDING + start_coordinate_y + (row + 1) * rr_radius
+            x2 = start_coordinate_x + (col + 1) * rr_radius
+            y2 = start_coordinate_y + (row + 1) * rr_radius
             # print(row, col, x1, y1, x2, y2)
-            cv.rectangle(copy_of_squared_img, (x1, y1), (x2, y2), RR_LineColor, rr_thickness, cv.LINE_AA)
+            cv.rectangle(copy_of_squared_img, (x1, y1), (x2, y2), rr_line_color, rr_thickness, cv.LINE_AA)
             RR[row][col] = [x1, y1, x2, y2]
 
             if show_detail:
                 # add RR label
-                rrIndex = row * numberOfRRPerRow + col
+                rrIndex = row * number_of_rr_per_row + col
                 cv.putText(copy_of_squared_img, 'RR' + str(rrIndex), (x1, y1 + 30), cv.FONT_HERSHEY_SIMPLEX, 1,
                            (255, 0, 0), 2, cv.LINE_AA)
 
@@ -124,8 +97,8 @@ def find_external_contours(src):
     return contours
 
 
-def contourIntersect(original_image, contour1, contour2):
-    """Contour Intersect
+def is_contour_intersect(original_image, contour1, contour2):
+    """地块轮廓交集检查
     """
     # Two separate contours trying to check intersection on
     contours = [contour1, contour2]
@@ -147,8 +120,8 @@ def contourIntersect(original_image, contour1, contour2):
     return intersection.any()
 
 
-def ccInRR(cc, rr):
-    """Chunked contour in side RR
+def is_chunked_land_in_rr(cc, rr):
+    """检查切割后的地块是否在供能方块内
     """
     rrX1, rrY1, rrX2, rrY2 = rr[0], rr[1], rr[2], rr[3]
     for ccPtr in cc:
@@ -170,76 +143,81 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
         rr_radius: 供能半径的长度
 
     Returns:
-        rrocDict: RR to Origianl contours dictionary
-        ocRRDict: Origianl contours to RR dictionary
+        rr_land_dict: RR to Origianl contours dictionary
+        land_rr_dict: Origianl contours to RR dictionary
     """
-    # prepare RR area for rrRatio = ccArea / rr_area
+    # 计算单个功能方块面积，用于计算切割后的地块在供能方块里的占比，从而知道属于哪个供能方块
+    # rr_ratio = cc_area / rr_area
     rr_area = rr_radius * rr_radius
 
-    # prepare chunked contour to RR's dictionary
-    ccRRDict = {}
+    # 存放切割后的地块和供能方块的关系
+    chunked_land_rr_dict = {}
 
-    for row, rrRow in enumerate(RR):
-        for col, rr in enumerate(rrRow):
+    for row, rr_row in enumerate(RR):
+        for col, rr in enumerate(rr_row):
 
-            for ccIndex, cc in enumerate(chunked_land_cnts):
-                ccArea = cv.contourArea(cc)
-                # exclude too small chunked contour and some noises point
-                if ccArea < 100:
+            for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
+                cc_area = cv.contourArea(chunked_land)
+                # 去除一些很小的噪音点
+                if cc_area < 100:
                     continue
 
                 # Contour Approximation to reduce points and save calculation time
-                epsilonCC = 0.1 * cv.arcLength(cc, True)
-                approxCC = cv.approxPolyDP(cc, epsilonCC, True)
+                epsilonCC = 0.1 * cv.arcLength(chunked_land, True)
+                approxCC = cv.approxPolyDP(chunked_land, epsilonCC, True)
 
-                retval = ccInRR(approxCC, rr)
+                retval = is_chunked_land_in_rr(approxCC, rr)
 
                 if retval:
-                    rrRatio = round(ccArea / rr_area * 100, 2)
-                    rrIndex = row * (len(RR)) + col
-                    # cc and rr are one to one relationship
-                    ccRRDict[ccIndex] = [rrIndex, rrRatio]
+                    rr_ratio = round(cc_area / rr_area * 100, 2)
+                    rr_index = row * (len(RR)) + col
+                    # chunked_land and rr are one to one relationship
+                    chunked_land_rr_dict[chunked_land_index] = [rr_index, rr_ratio]
 
-    # prepare original contour to RR's dictionary by the chunked contour and RR's dictionary
-    ocRRDict = {}
-    for ocIndex, oc in enumerate(land_cnts):
-        for ccIndex, cc in enumerate(chunked_land_cnts):
+    # 存放地块和供能方块的关系
+    land_rr_dict = {}
 
-            # the cc may be too small to be calculated, it may not in the ccRRDict, skip it
-            if ccIndex not in ccRRDict:
+    # 根据切割的地块与供能方块的关系，以及未切割前的原始地块，来计算地块和供能方块关系
+    for land_index, land in enumerate(land_cnts):
+        for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
+
+            # TODO 可以考虑检查切割的地块颜色是否和原始地块匹配，来提升性能
+            # 检查切割后的地块是否存在过滤后的地块和供能关系里
+            if chunked_land_index not in chunked_land_rr_dict:
                 continue
 
-            retval = contourIntersect(hot_cold_img, cc, oc)
+            retval = is_contour_intersect(hot_cold_img, chunked_land, land)
 
             if retval:
-                rr = ccRRDict[ccIndex]
-                rrIndex = rr[0]
-                rrRatio = rr[1]
-                if ocIndex not in ocRRDict:
-                    ocRRDict[ocIndex] = [rrIndex, rrRatio]
+                rr = chunked_land_rr_dict[chunked_land_index]
+                rr_index = rr[0]
+                rr_ratio = rr[1]
+                if land_index not in land_rr_dict:
+                    land_rr_dict[land_index] = [rr_index, rr_ratio]
                 else:
-                    # check if the current cc's RR ratio is bigger than the previous saved in ocRRDict one
-                    prevRR = ocRRDict[ocIndex]
-                    prevRatio = prevRR[1]
-                    if rrRatio > prevRatio:
-                        ocRRDict[ocIndex] = [rrIndex, rrRatio]
+                    # 切割后的地块占供能方块的面积比例最大的，作为原始地块和供能方块关联的前提
+                    prev_rr = land_rr_dict[land_index]
+                    prev_ratio = prev_rr[1]
+                    if rr_ratio > prev_ratio:
+                        land_rr_dict[land_index] = [rr_index, rr_ratio]
 
-    # get RR to original contours map
-    rrocDict = {}
-    for ocIndex in ocRRDict:
-        rr = ocRRDict[ocIndex]
-        rrIndex = rr[0]
-        ocList = rrocDict.get(rrIndex, [])
-        ocList.append(ocIndex)
-        rrocDict[rrIndex] = ocList
+    # 获取供能与原始地块的关系
+    rr_land_dict = {}
+    for land_index in land_rr_dict:
+        rr = land_rr_dict[land_index]
+        rr_index = rr[0]
+        ocList = rr_land_dict.get(rr_index, [])
+        ocList.append(land_index)
+        rr_land_dict[rr_index] = ocList
 
-    print('ccRRDict', ccRRDict)
-    print('ocRRDict', ocRRDict)
-    print('rrocDict', rrocDict)
-    return rrocDict, ocRRDict
+    print('chunked_land_rr_dict', chunked_land_rr_dict)
+    print('land_rr_dict', land_rr_dict)
+    print('rr_land_dict', rr_land_dict)
+    return rr_land_dict, land_rr_dict
 
 
 def show_cnt_id(cnts, img, img_name):
+    """显示地块轮廓id"""
     copy = img.copy()
     for ccIndex, cc in enumerate(cnts):
         x, y, w, h = cv.boundingRect(cc)
@@ -248,7 +226,7 @@ def show_cnt_id(cnts, img, img_name):
     cv.imshow(img_name, copy)
 
 
-def process(squared_img, rr_radius, debug=False):
+def process_with_rr(squared_img, rr_radius, debug=False):
     """处理图像
     生成一张带有功能半径的示例图像
     生成一张用于计算冷热分区的图像
@@ -256,6 +234,7 @@ def process(squared_img, rr_radius, debug=False):
     Args:
         squared_img: 正方形图像
         rr_radius: 供能半径
+        debug: 调式，默认False关闭
 
     Raises:
         ZeroDivisionError: division by zero
@@ -314,30 +293,41 @@ def process(squared_img, rr_radius, debug=False):
 
         cv.imshow('copy_for_hot_cold', copy_for_hot_cold)
 
+    #TODO 返回按供能方块id分组的地块坐标，approx以后的，不然数据太大
 
-# init global constant
-EXTRA_PADDING = 10
+
+def process(img_abs_path):
+    """读入并处理图像"""
+    src = cv.imread(img_abs_path)
+    src_width = src.shape[1]
+
+    # resize有助于提升处理速度
+    # TODO 测试不同像素的处理速度，在800像素时效果最佳，识别率100%，17s左右
+    fixed_width = 800
+    src = image_util.resize_img(src, fixed_width=fixed_width)
+
+    # TODO 填充为正方形，可以用于分类切割后的图片的填充，便于找边界，这里对原图填充显得多余
+    # squared_img = generate_square_img(src)
+    squared_img = src
+
+    # TODO 从比例尺中获取像素和实际距离的比例
+    # TODO 实际总地块长度也可以减少画出的供能方块，从而减少匹配时需要的个数
+    # TODO 抠图后生成的 地块 方向 颜色 比例尺的小图也可以加速图片的处理，所以图片分类切割的第一步很重要
+    # TODO 分割后的地块色块信息也是可以用来优化切割地块和原始地块的匹配速度的
+    # 1km = 670 pixels
+    src_scale = 670
+    resized_scale = round(src_scale / (src_width / fixed_width))
+    rr_radius = resized_scale
+
+    # 处理图像
+    process_with_rr(squared_img, rr_radius, debug=True)
 
 
 def main():
     # 读取图片
     img_abs_path = image_util.img_abs_path('/images/id1/id1.png')
-    print(img_abs_path)
 
-    src = cv.imread(img_abs_path)
-
-    # resize有助于提升处理速度
-    # TODO 测试不同像素的处理速度
-    src = image_util.resize_img(src)
-    # 填充为正方形
-    squared_img = generate_square_img(src)
-
-    # 1km = 670 pixels
-    scale = 670
-    rr_radius = scale
-
-    # 处理图像
-    process(squared_img, rr_radius, debug=True)
+    process(img_abs_path)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
