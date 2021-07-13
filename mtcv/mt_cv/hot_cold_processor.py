@@ -158,22 +158,23 @@ def ccInRR(cc, rr):
     return True
 
 
-def get_rr_land_dict(copyOfsqauredImgForHC, RR, originalCnts, chunkedCnts, RR_radius):
-    """Get the RR and Origianl contours dictionary
-    Get the RR region as Hot Cold Region and has a list of original contours related to the Hot Cold Region
+def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
+    """获取供能半径和地块的关系
+    地块按照供能半径分组，供能半径从左往右，从0开始展开
 
     Args:
-        RR: RR region, and after calculated it will be the Hot Cold Region
-        originalCnts: Origianl contours
-        chunkedCnts: chunked up Origianl contours
-        RR_radius: RR region's size, RR is a square
+        hot_cold_img: 输入图片
+        RR: 供能半径的位置信息，行和列
+        land_cnts: 地块轮廓
+        chunked_land_cnts: 被功能半径切割后的地块轮廓
+        rr_radius: 供能半径的长度
 
     Returns:
         rrocDict: RR to Origianl contours dictionary
         ocRRDict: Origianl contours to RR dictionary
     """
-    # prepare RR area for rrRatio = ccArea / rrArea
-    rrArea = RR_radius * RR_radius
+    # prepare RR area for rrRatio = ccArea / rr_area
+    rr_area = rr_radius * rr_radius
 
     # prepare chunked contour to RR's dictionary
     ccRRDict = {}
@@ -181,7 +182,7 @@ def get_rr_land_dict(copyOfsqauredImgForHC, RR, originalCnts, chunkedCnts, RR_ra
     for row, rrRow in enumerate(RR):
         for col, rr in enumerate(rrRow):
 
-            for ccIndex, cc in enumerate(chunkedCnts):
+            for ccIndex, cc in enumerate(chunked_land_cnts):
                 ccArea = cv.contourArea(cc)
                 # exclude too small chunked contour and some noises point
                 if ccArea < 100:
@@ -194,21 +195,21 @@ def get_rr_land_dict(copyOfsqauredImgForHC, RR, originalCnts, chunkedCnts, RR_ra
                 retval = ccInRR(approxCC, rr)
 
                 if retval:
-                    rrRatio = round(ccArea / rrArea * 100, 2)
+                    rrRatio = round(ccArea / rr_area * 100, 2)
                     rrIndex = row * (len(RR)) + col
                     # cc and rr are one to one relationship
                     ccRRDict[ccIndex] = [rrIndex, rrRatio]
 
     # prepare original contour to RR's dictionary by the chunked contour and RR's dictionary
     ocRRDict = {}
-    for ocIndex, oc in enumerate(originalCnts):
-        for ccIndex, cc in enumerate(chunkedCnts):
+    for ocIndex, oc in enumerate(land_cnts):
+        for ccIndex, cc in enumerate(chunked_land_cnts):
 
             # the cc may be too small to be calculated, it may not in the ccRRDict, skip it
             if ccIndex not in ccRRDict:
                 continue
 
-            retval = contourIntersect(copyOfsqauredImgForHC, cc, oc)
+            retval = contourIntersect(hot_cold_img, cc, oc)
 
             if retval:
                 rr = ccRRDict[ccIndex]
