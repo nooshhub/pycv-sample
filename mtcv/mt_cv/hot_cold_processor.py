@@ -293,7 +293,8 @@ def process_with_rr(squared_img, rr_radius, debug=False):
 
         cv.imshow('copy_for_hot_cold', copy_for_hot_cold)
 
-    #TODO 返回按供能方块id分组的地块坐标，approx以后的，不然数据太大
+    # TODO 返回按供能方块id分组的地块坐标，approx以后的，不然数据太大
+    return rr_land_dict
 
 
 def process(img_abs_path):
@@ -320,7 +321,8 @@ def process(img_abs_path):
     rr_radius = resized_scale
 
     # 处理图像
-    process_with_rr(squared_img, rr_radius, debug=True)
+    rr_land_data = process_with_rr(squared_img, rr_radius, debug=True)
+    return rr_land_data
 
 
 def main():
