@@ -299,22 +299,14 @@ def process(squared_img, rr_radius, debug=False):
     print('takes ', time)
 
     if debug:
-        # mark HOT COLD region with different colors, same hot cold region use the same color
+        # 将相同冷暖区的地块填充为同一种随机色
         for rrIndex in rr_land_dict:
-            # prepare color for the same hot cold region's contours
-            #         rng = np.random.randint(0, 255)
-            #         b,g,r = rng&255, (rng>>8)&255, (rng>>16)&255
             b, g, r = np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)
-
-            #         b = 250 - rrIndex * 16
-            #         g = 250 - rrIndex * 8
-            #         r = 250 - rrIndex * 2
             color = (b, g, r)
             for land_index in rr_land_dict[rrIndex]:
                 cv.fillConvexPoly(copy_for_hot_cold, land_cnts[land_index], color)
 
-        # mark missed original contour as black for us to fix them later
-        # not sure why, but the intersection algorithm is most likely to be the root cause
+        # 没有找出来的地块用黑色填充
         for land_index, oc in enumerate(land_cnts):
             if land_index not in land_rr_dict:
                 cv.fillConvexPoly(copy_for_hot_cold, oc, (0, 0, 0))
