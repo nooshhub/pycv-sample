@@ -1,22 +1,21 @@
 import numpy as np
 import cv2 as cv
 import sys
-
-"""Transform Rectangle Image to Square
-
-Change the original image from rectanle to square,
-so we can build RR square without out of boundary
-
-Args:
-    img: source image
-
-Returns:
-    squared image
-
-"""
+from mt_cv import image_util
 
 
-def makeSqaureImg(src):
+def generate_square_img(src):
+    """将图片填充成正方形的
+
+    将图片填充成正方形的，方便我们使用功能半径去分割地块而不至于越界
+
+    Args:
+        src: 输入图像
+
+    Returns:
+        正方形图像
+
+    """
     h, w = src.shape[0], src.shape[1]
     topPad, bottomPad, leftPad, rightPad = 0, 0, 0, 0
     if h >= w:
@@ -27,49 +26,32 @@ def makeSqaureImg(src):
     padding = [topPad, bottomPad, leftPad, rightPad]
     # add additional padding 10px for each edge, so we can see axes clearly
     padding = [x + EXTRA_PADDING for x in padding]
-    sqauredImg = cv.copyMakeBorder(src, padding[0], padding[1], padding[2], padding[3], cv.BORDER_CONSTANT,
-                                   value=(255, 255, 255))
-    return sqauredImg
+    squared_img = cv.copyMakeBorder(src, padding[0], padding[1], padding[2], padding[3], cv.BORDER_CONSTANT,
+                                    value=(255, 255, 255))
+    return squared_img
 
 
-"""Draw Rect for testing
-Args:
-    copyOfsqauredImg: A copy of squared image
-    limit: limit the width and height, default is 100
-"""
+def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False):
+    """画出功能半径分割图
+    RR square is render N*N squares on screen depends on the size of square image and RR radius.
+    The original image will be separate by the white RR line.
 
+    Args:
+        copy_of_squared_img: a copy of squared image
+        rr_radius: 功能半径
+        start_coordinate: 起始位置
+        show_detail: True show bouding rect, RR label, blue RR line
 
-def drawRect(copyOfsqauredImg, cnts, limit=100):
-    # draw contour rectangle
-    for cnt in cnts:
-        x, y, w, h = cv.boundingRect(cnt)
-        if limit:
-            if w > limit and h > limit:
-                cv.rectangle(copyOfsqauredImg, (x, y), (x + w, y + h), (0, 255, 0), 2, cv.LINE_AA)
-
-
-"""Draw RR
-RR square is render N*N squares on screen depends on the size of square image and RR radius.
-The original image will be separate by the white RR line.
-
-Args:
-    copyOfsqauredImg: a copy of squared image
-    showDetail: True show bouding rect, RR label, blue RR line
-
-"""
-
-
-def drawRR(copyOfsqauredImg, showDetail=False):
-    # getStartCoordiante for Axes
-    startCoordinate = findStartCoordinate(src)
-    startCoordianteX, startCoordianteY = startCoordinate[0], startCoordinate[1]
+    """
+    # getStartCoordinate for Axes
+    start_coordinate_x, start_coordinate_y = start_coordinate[0], start_coordinate[1]
 
     # get curren positions trackbars
-    RR_radius = cv.getTrackbarPos('RR_radius', 'Partition')
-    RR_thickness = 4
-    numberOfRRPerRow = round(maxSizeOfSrcImg / RR_radius)
+    rr_thickness = 4
+    maxSizeOfSrcImg = max(copy_of_squared_img.shape[0], copy_of_squared_img.shape[1])
+    numberOfRRPerRow = round(maxSizeOfSrcImg / rr_radius)
 
-    RR_LineColor = (255, 0, 0) if showDetail else (255, 255, 255)
+    RR_LineColor = (255, 0, 0) if show_detail else (255, 255, 255)
 
     RR = np.zeros((numberOfRRPerRow, numberOfRRPerRow, 4), np.uint32)
 
@@ -77,35 +59,35 @@ def drawRR(copyOfsqauredImg, showDetail=False):
         for col in range(numberOfRRPerRow):
             # each start position
             # start point
-            x1 = EXTRA_PADDING + startCoordianteX + col * RR_radius
-            y1 = EXTRA_PADDING + startCoordianteY + row * RR_radius
+            x1 = EXTRA_PADDING + start_coordinate_x + col * rr_radius
+            y1 = EXTRA_PADDING + start_coordinate_y + row * rr_radius
             # end point
-            x2 = EXTRA_PADDING + startCoordianteX + (col + 1) * RR_radius
-            y2 = EXTRA_PADDING + startCoordianteY + (row + 1) * RR_radius
+            x2 = EXTRA_PADDING + start_coordinate_x + (col + 1) * rr_radius
+            y2 = EXTRA_PADDING + start_coordinate_y + (row + 1) * rr_radius
             # print(row, col, x1, y1, x2, y2)
-            cv.rectangle(copyOfsqauredImg, (x1, y1), (x2, y2), RR_LineColor, RR_thickness, cv.LINE_AA)
+            cv.rectangle(copy_of_squared_img, (x1, y1), (x2, y2), RR_LineColor, rr_thickness, cv.LINE_AA)
             RR[row][col] = [x1, y1, x2, y2]
 
-            if showDetail:
+            if show_detail:
                 # add RR label
                 rrIndex = row * numberOfRRPerRow + col
-                cv.putText(copyOfsqauredImg, 'RR' + str(rrIndex), (x1, y1 + 30), cv.FONT_HERSHEY_SIMPLEX, 1,
+                cv.putText(copy_of_squared_img, 'RR' + str(rrIndex), (x1, y1 + 30), cv.FONT_HERSHEY_SIMPLEX, 1,
                            (255, 0, 0), 2, cv.LINE_AA)
 
-    return RR, RR_radius
+    return RR
 
 
-"""Find Start Coordinate
-Get all contours' bouding rectangles and get min y and min x from rectangle.
-Args:
-    cnts: original contours
-Returns:
-    StartCoordinate tuple (minX,minY)
-"""
+def find_start_coordinate(cnts):
+    """找出起始坐标
 
+    获取所有地块的bounding rectangle，获取rectangle里最小的x和y坐标，就是起始坐标
 
-def findStartCoordinate(src):
-    cnts = findExternalContours(src)
+    Args:
+        src： 输入图像
+        cnts: original contours
+    Returns:
+        StartCoordinate tuple (minX,minY)
+    """
 
     minX, minY = sys.maxsize, sys.maxsize
     for cnt in cnts:
@@ -113,19 +95,17 @@ def findStartCoordinate(src):
         x, y = rect[0], rect[1]
         minX = min(minX, x)
         minY = min(minY, y)
-    return (minX, minY)
+    return minX, minY
 
 
-"""Find Original Contours
-Find Original Contours from source image, we only need external contour.
-Args:
-    src: source image
-Returns:
-    Original contours
-"""
-
-
-def findExternalContours(src):
+def find_external_contours(src):
+    """Find Original Contours
+    Find Original Contours from source image, we only need external contour.
+    Args:
+        src: source image
+    Returns:
+        Original contours
+    """
     # preprocess, remove noise, a lot noise on the road
     gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
 
@@ -144,11 +124,9 @@ def findExternalContours(src):
     return contours
 
 
-"""Contour Intersect
-"""
-
-
 def contourIntersect(original_image, contour1, contour2):
+    """Contour Intersect
+    """
     # Two separate contours trying to check intersection on
     contours = [contour1, contour2]
 
@@ -169,11 +147,9 @@ def contourIntersect(original_image, contour1, contour2):
     return intersection.any()
 
 
-"""Chunked contour in side RR
-"""
-
-
 def ccInRR(cc, rr):
+    """Chunked contour in side RR
+    """
     rrX1, rrY1, rrX2, rrY2 = rr[0], rr[1], rr[2], rr[3]
     for ccPtr in cc:
         ccX, ccY = ccPtr[0][0], ccPtr[0][1]
@@ -182,22 +158,20 @@ def ccInRR(cc, rr):
     return True
 
 
-"""Get the RR and Origianl contours dictionary
-Get the RR region as Hot Cold Region and has a list of original contours related to the Hot Cold Region
+def get_rr_land_dict(copyOfsqauredImgForHC, RR, originalCnts, chunkedCnts, RR_radius):
+    """Get the RR and Origianl contours dictionary
+    Get the RR region as Hot Cold Region and has a list of original contours related to the Hot Cold Region
 
-Args:
-    RR: RR region, and after calculated it will be the Hot Cold Region
-    originalCnts: Origianl contours
-    chunkedCnts: chunked up Origianl contours
-    RR_radius: RR region's size, RR is a square
+    Args:
+        RR: RR region, and after calculated it will be the Hot Cold Region
+        originalCnts: Origianl contours
+        chunkedCnts: chunked up Origianl contours
+        RR_radius: RR region's size, RR is a square
 
-Returns:
-    rrocDict: RR to Origianl contours dictionary
-    ocRRDict: Origianl contours to RR dictionary
-"""
-
-
-def getRROCDic(copyOfsqauredImgForHC, RR, originalCnts, chunkedCnts, RR_radius):
+    Returns:
+        rrocDict: RR to Origianl contours dictionary
+        ocRRDict: Origianl contours to RR dictionary
+    """
     # prepare RR area for rrRatio = ccArea / rrArea
     rrArea = RR_radius * RR_radius
 
@@ -234,19 +208,6 @@ def getRROCDic(copyOfsqauredImgForHC, RR, originalCnts, chunkedCnts, RR_radius):
             if ccIndex not in ccRRDict:
                 continue
 
-                # Contour Approximation to reduce points and save calculation time
-            #             epsilonOC = 0.1 * cv.arcLength(oc,True)
-            #             approxOC = cv.approxPolyDP(oc,epsilonOC,True)
-
-            #             epsilonCC = 0.1 * cv.arcLength(cc,True)
-            #             approxCC = cv.approxPolyDP(cc,epsilonCC,True)
-
-            #             retval = contour_intersect(approxOC, approxCC)
-            #             retval = aInsideB(approxCC, approxOC)
-            # getRROCDic takes  34.2955815s
-            #             retval = contourIntersect(copyOfsqauredImgForHC, approxCC, approxOC)
-
-            # getRROCDic takes  33.1093472s
             retval = contourIntersect(copyOfsqauredImgForHC, cc, oc)
 
             if retval:
@@ -277,123 +238,114 @@ def getRROCDic(copyOfsqauredImgForHC, RR, originalCnts, chunkedCnts, RR_radius):
     return rrocDict, ocRRDict
 
 
-"""Render Image
-
-Render image with track bars, sqaure image, RR square, axes.
-Track bars:    RR_radius - size for RR squqre
-Square image:  the squared source image
-RR square:     render N*N squares on screen depends on the size of square image and RR radius
-Axes:          line to mark where the RR square start
-
-Args:
-    x: x
-
-Raises:
-    ZeroDivisionError: division by zero
-
-"""
-
-
-def renderImage(x):
-    # 1 show details of RR
-    copyOfsqauredImgForDetail = sqauredImg.copy()
-    # find original contours for data preparation
-    originalCnts = findExternalContours(copyOfsqauredImgForDetail)
-
-    # add chunked contour ID for testing
-    copyOfsqauredImgForDetailWithID = copyOfsqauredImgForDetail.copy()
-    for ocIndex, oc in enumerate(originalCnts):
-        x, y, w, h = cv.boundingRect(oc)
-        cv.putText(copyOfsqauredImgForDetailWithID, str(ocIndex), (x + 5, y + 10), cv.FONT_HERSHEY_PLAIN, 1,
-                   (255, 0, 0), 1, cv.LINE_AA)
-    cv.imshow('copyOfsqauredImgForDetail with OCID', copyOfsqauredImgForDetailWithID)
-
-    # draw RR for testing
-    RR, RR_radius = drawRR(copyOfsqauredImgForDetail, True)
-
-    # 2 start collecting HotCold Region
-    copyOfsqauredImgForHC = sqauredImg.copy()
-    # draw RR
-    drawRR(copyOfsqauredImgForHC)
-    # find chunked contours
-    chunkedCnts = findExternalContours(copyOfsqauredImgForHC)
-
-    # add chunked contour ID for testing
-    copyOfsqauredImgForHCWithID = copyOfsqauredImgForHC.copy()
-    for ccIndex, cc in enumerate(chunkedCnts):
+def show_cnt_id(cnts, img, img_name):
+    copy = img.copy()
+    for ccIndex, cc in enumerate(cnts):
         x, y, w, h = cv.boundingRect(cc)
-        cv.putText(copyOfsqauredImgForHCWithID, str(ccIndex), (x + 5, y + 10), cv.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 1,
+        cv.putText(copy, str(ccIndex), (x + 5, y + 10), cv.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 1,
                    cv.LINE_AA)
-    cv.imshow('copyOfsqauredImgForHC with CCID', copyOfsqauredImgForHCWithID)
+    cv.imshow(img_name, copy)
 
+
+def process(squared_img, rr_radius, debug=False):
+    """处理图像
+    生成一张带有功能半径的示例图像
+    生成一张用于计算冷热分区的图像
+
+    Args:
+        squared_img: 正方形图像
+        rr_radius: 供能半径
+
+    Raises:
+        ZeroDivisionError: division by zero
+    """
+
+    # 找出所有地块
+    land_cnts = find_external_contours(squared_img)
+
+    # 找出功能半径起始位置
+    start_coordinate = find_start_coordinate(land_cnts)
+
+    if debug:
+        # 生成一张带有功能半径的验证图像
+        rr_detail = squared_img.copy()
+        show_cnt_id(land_cnts, rr_detail, 'rr_detail_with_land_id')
+
+        # draw RR for testing
+        draw_rr(rr_detail, rr_radius, start_coordinate, show_detail=True)
+        cv.imshow('rr_detail', rr_detail)
+
+    # 准备收集冷热分区
+    copy_for_hot_cold = squared_img.copy()
+
+    # 画出计算用的功能半径
+    RR = draw_rr(copy_for_hot_cold, rr_radius, start_coordinate)
+
+    # 找出所有被切割和未被切割的地块
+    chunked_land_cnts = find_external_contours(copy_for_hot_cold)
+
+    if debug:
+        # add chunked contour ID for testing
+        show_cnt_id(chunked_land_cnts, copy_for_hot_cold, 'copy_for_hot_cold_with_land_id')
+
+    # 计算时间
     e1 = cv.getTickCount()
 
-    # get dictionary for RR and origianl contour's relationship
-    rrocDict, ocRRDict = getRROCDic(copyOfsqauredImgForHC, RR, originalCnts, chunkedCnts, RR_radius)
+    # 获取功能半径和地块的关联关系
+    rr_land_dict, land_rr_dict = get_rr_land_dict(copy_for_hot_cold, RR, land_cnts, chunked_land_cnts, rr_radius)
 
     e2 = cv.getTickCount()
     time = (e2 - e1) / cv.getTickFrequency()
-    print('getRROCDic takes ', time)
+    print('takes ', time)
 
-    # mark HOT COLD regison with different colors, same hot cold region use the same color
-    for rrIndex in rrocDict:
-        # prepare color for the same hot cold region's contours
-        #         rng = np.random.randint(0, 255)
-        #         b,g,r = rng&255, (rng>>8)&255, (rng>>16)&255
-        b, g, r = np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)
+    if debug:
+        # mark HOT COLD region with different colors, same hot cold region use the same color
+        for rrIndex in rr_land_dict:
+            # prepare color for the same hot cold region's contours
+            #         rng = np.random.randint(0, 255)
+            #         b,g,r = rng&255, (rng>>8)&255, (rng>>16)&255
+            b, g, r = np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)
 
-        #         b = 250 - rrIndex * 16
-        #         g = 250 - rrIndex * 8
-        #         r = 250 - rrIndex * 2
-        color = (b, g, r)
-        for ocIndex in rrocDict[rrIndex]:
-            cv.fillConvexPoly(copyOfsqauredImgForHC, originalCnts[ocIndex], color)
+            #         b = 250 - rrIndex * 16
+            #         g = 250 - rrIndex * 8
+            #         r = 250 - rrIndex * 2
+            color = (b, g, r)
+            for land_index in rr_land_dict[rrIndex]:
+                cv.fillConvexPoly(copy_for_hot_cold, land_cnts[land_index], color)
 
-    # mark missed original contour as black for us to fix them later
-    # not sure why, but the intersection algorithm is most likely to be the root cause
-    for ocIndex, oc in enumerate(originalCnts):
-        if ocIndex not in ocRRDict:
-            cv.fillConvexPoly(copyOfsqauredImgForHC, oc, (0, 0, 0))
+        # mark missed original contour as black for us to fix them later
+        # not sure why, but the intersection algorithm is most likely to be the root cause
+        for land_index, oc in enumerate(land_cnts):
+            if land_index not in land_rr_dict:
+                cv.fillConvexPoly(copy_for_hot_cold, oc, (0, 0, 0))
 
-    #     print(len(originalCnts))
-    #     cv.drawContours(copyOfsqauredImgForDetail, originalCnts, -1, (0,0,255), 2)
-    #     drawRect(copyOfsqauredImgForDetail, originalCnts)
-    #     print(len(chunkedCnts))
-    #     cv.drawContours(copyOfsqauredImgForHC, chunkedCnts, -1, (0,0,255), 2)
-    #     drawRect(copyOfsqauredImgForHC, chunkedCnts, False)
-
-    cv.imshow('Partition', copyOfsqauredImgForDetail)
-    cv.imshow('CopyOfsqauredImgForHC', copyOfsqauredImgForHC)
+        cv.imshow('copy_for_hot_cold', copy_for_hot_cold)
 
 
-# init
 # init global constant
 EXTRA_PADDING = 10
-# init global variables here
-src = cv.imread('partition1.png')
-maxSizeOfOriginalSrcImg = max(src.shape[0], src.shape[1])
-# resize to half
-# src = cv.resize(src, (0,0), fx=0.3, fy=0.3)
-src = cv.resize(src, (0, 0), fx=800 / maxSizeOfOriginalSrcImg, fy=800 / maxSizeOfOriginalSrcImg)
 
-# prepare size and sqaured image after resize for a better demo
-maxSizeOfSrcImg = max(src.shape[0], src.shape[1])
-sqauredImg = makeSqaureImg(src)
 
-# prepare
-# create a widnow
-cv.namedWindow('Partition')
-# cteate trackbars RR radius changes
-# RR radius for draw rectangle, 220 is as the demo
-cv.createTrackbar('RR_radius', 'Partition', 200, maxSizeOfSrcImg, renderImage)
+def main():
+    # 读取图片
+    src = cv.imread('../images/id1/id1.png')
 
-# render
-renderImage(-1)
+    # resize有助于提升处理速度
+    # TODO 测试不同像素的处理速度
+    src = image_util.resize_img(src)
+    # 填充为正方形
+    squared_img = generate_square_img(src)
 
-# loop until use press ESC
-while (1):
-    k = cv.waitKey(100) & 0xFF
-    if k == 27:
-        break
+    # 1km = 670 pixels
+    scale = 670
+    rr_radius = scale
 
-cv.destroyAllWindows()
+    # 处理图像
+    process(squared_img, rr_radius, debug=True)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+
+if __name__ == '__main__':
+    main()
