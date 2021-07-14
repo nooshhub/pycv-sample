@@ -321,7 +321,7 @@ def process(img_abs_path):
     rr_radius = resized_scale
 
     # 处理图像
-    rr_land_data = process_with_rr(squared_img, rr_radius, debug=True)
+    rr_land_data = process_with_rr(squared_img, rr_radius)
     return rr_land_data
 
 
