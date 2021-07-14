@@ -290,28 +290,117 @@ uvicorn main:app --reload
 
 ### docker
 
-[参考](https://fastapi.tiangolo.com/zh/deployment/docker/)
+putty
 
 ```
+# psftp
+open host_name
+# 单个文件
+put D:/anaconda3/pycv-sample/mtcv/Dockerfile /zhny2.0/mtcv/Dockerfile 
+# 目录
+put -r D:/anaconda3/pycv-sample/mtcv/ /zhny2.0/mtcv/
+```
+
+[psftp 参考](https://jingyan.baidu.com/article/d169e18658995a436611d8ee.html)
+
+
+
+```
+# 端口检查
+lsof -i tcp:8001
+# 系统信息 
+uname -a
+lsb_release -a
+
+```
+
+[linux 系统信息参考](https://jingyan.baidu.com/article/7908e85c725159af481ad2f7.html)
+
+
+
+```
+/etc/docker/daemon.json
+
+{"registry-mirrors":["https://reg-mirror.qiniu.com/"]}
+
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart docker
+```
+
+[镜像加速参考](https://www.runoob.com/docker/docker-mirror-acceleration.html)
+
+
+
+```dockerfile
 FROM python:3.9
 
 RUN pip install fastapi uvicorn opencv-python==4.5.1.48 opencv-contrib-python==4.5.1.48
 
-EXPOSE 80
+EXPOSE 8000
 
-COPY ./ /app
+COPY ./ /
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
-
-
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 
 
+```shell
+# 删除之前无用的镜像
+docker images
+docker rmi -f 50fa88577b3c
+docker rmi -f mtcv
+
+# 删除之前无用的容器
+docker ps -a
+docker rm -f de74e81dc74f
+docker rm -f mtcv
+
+# build and run
+docker build -t mtcv .
+# 后台启动
+docker run -d --name mtcv -p 8001:8000 mtcv
+# 测试用启动
+docker run --rm --name mtcv -p 8001:8000 mtcv
 ```
-docker build -t pycv .
-docker run -d --name pycv -p 80:80 pycv
+
+[docker 参考](https://fastapi.tiangolo.com/zh/deployment/docker/)
+
+
+
 ```
+# 查看启动失败日志
+docker logs -f mtcv
+```
+
+[docker 日志查询](https://www.runoob.com/docker/docker-container-usage.html)
+
+
+
+```
+# File "/usr/local/lib/python3.9/site-packages/cv2/__init__.py", line 5, in <module>
+#    from .cv2 import *
+# ImportError: libGL.so.1: cannot open shared object file: No such file or directory
+
+# RUN apt install libgl1-mesa-glx -y
+RUN apt-get install 'ffmpeg'\
+    'libsm6'\
+    'libxext6'  -y
+```
+
+[libGL参考 1](https://stackoverflow.com/questions/63889102/unable-to-run-docker-image-due-to-libgl-error)
+
+[libGL参考 2](https://stackoverflow.com/questions/55313610/importerror-libgl-so-1-cannot-open-shared-object-file-no-such-file-or-directo)
+
+
+
+
+
+todo：缺少快捷查看日志的功能
+
+todo：增加requirements.txt简化Dockerfile
+
+todo: 将固定的依赖打成一个image，这样不用每次都下载
 
 
 
