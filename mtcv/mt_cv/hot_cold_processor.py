@@ -280,10 +280,10 @@ def process_with_rr(squared_img, rr_radius, debug=False):
 
     if debug:
         # 将相同冷暖区的地块填充为同一种随机色
-        for rrIndex in rr_land_dict:
+        for rr_index in rr_land_dict:
             b, g, r = np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)
             color = (b, g, r)
-            for land_index in rr_land_dict[rrIndex]:
+            for land_index in rr_land_dict[rr_index]:
                 cv.fillConvexPoly(copy_for_hot_cold, land_cnts[land_index], color)
 
         # 没有找出来的地块用黑色填充
