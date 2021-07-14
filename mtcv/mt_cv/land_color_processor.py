@@ -84,25 +84,6 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, debug=False, debug
     return land_dict
 
 
-def convert_contour_to_pts(cnt):
-    """将contour转换成point"""
-
-    # 将轮廓转换成近似的多边形，按周长的0.1计算，如果不准确可以调小一些，例如0.05
-    # 采用approx之后，返回值从1m变为45kb
-    epsilon = 0.1 * cv.arcLength(cnt, True)
-    approx_cnt = cv.approxPolyDP(cnt, epsilon, True)
-
-    pts = []
-    for pt in approx_cnt:
-        pt_dict = {
-            "xAxis": int(pt[0][0]),
-            "yAxis": int(pt[0][1])
-        }
-        pts.append(pt_dict)
-
-    return pts
-
-
 def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
     """使用颜色来找出单个地块内的色块
 
@@ -112,7 +93,7 @@ def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
         debug: 开启debug
 
     """
-    land_color_dict = {'area': cv.contourArea(land_cnt), 'points': convert_contour_to_pts(land_cnt), 'children': []}
+    land_color_dict = {'area': cv.contourArea(land_cnt), 'points': image_util.convert_contour_to_pts(land_cnt), 'children': []}
 
     land_region = image_util.get_roi_by_contour(img_white_bg, land_cnt)
     if debug:
@@ -146,7 +127,9 @@ def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
 
         color_dicts = []
         for color_cnt in contours:
-            color_dict = {'area': cv.contourArea(color_cnt), 'points': convert_contour_to_pts(color_cnt), 'color': bgr}
+            color_dict = {'area': cv.contourArea(color_cnt),
+                          'points': image_util.convert_contour_to_pts(color_cnt),
+                          'color': bgr}
             color_dicts.append(color_dict)
         land_color_dict['children'].extend(color_dicts)
 
@@ -179,7 +162,7 @@ def find_scale(img_white_bg):
     # TODO 找出比例尺轮廓
     px_to_1km = 670
     px_km_scale = px_to_1km / 1000
-    print(1 / (px_km_scale * px_km_scale))
+    # print(1 / (px_km_scale * px_km_scale))
     return px_km_scale
 
 

@@ -206,13 +206,13 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
     for land_index in land_rr_dict:
         rr = land_rr_dict[land_index]
         rr_index = rr[0]
-        ocList = rr_land_dict.get(rr_index, [])
-        ocList.append(land_index)
-        rr_land_dict[rr_index] = ocList
+        oc_list = rr_land_dict.get(rr_index, [])
+        oc_list.append(land_index)
+        rr_land_dict[rr_index] = oc_list
 
-    print('chunked_land_rr_dict', chunked_land_rr_dict)
-    print('land_rr_dict', land_rr_dict)
-    print('rr_land_dict', rr_land_dict)
+    # print('chunked_land_rr_dict', chunked_land_rr_dict)
+    # print('land_rr_dict', land_rr_dict)
+    # print('rr_land_dict', rr_land_dict)
     return rr_land_dict, land_rr_dict
 
 
@@ -278,6 +278,16 @@ def process_with_rr(squared_img, rr_radius, debug=False):
     time = (e2 - e1) / cv.getTickFrequency()
     print('takes ', time)
 
+    rr_land_data = []
+    for rr_index in rr_land_dict:
+        rr_data = {'rr_index': rr_index, 'land_data': []}
+
+        for land_index in rr_land_dict[rr_index]:
+            land_data = {'pts': image_util.convert_contour_to_pts(land_cnts[land_index])}
+            rr_data['land_data'].append(land_data)
+
+        rr_land_data.append(rr_data)
+
     if debug:
         # 将相同冷暖区的地块填充为同一种随机色
         for rr_index in rr_land_dict:
@@ -294,7 +304,7 @@ def process_with_rr(squared_img, rr_radius, debug=False):
         cv.imshow('copy_for_hot_cold', copy_for_hot_cold)
 
     # TODO 返回按供能方块id分组的地块坐标，approx以后的，不然数据太大
-    return rr_land_dict
+    return rr_land_data
 
 
 def process(img_abs_path):
@@ -322,7 +332,7 @@ def process(img_abs_path):
 
     # 处理图像
     rr_land_data = process_with_rr(squared_img, rr_radius)
-    return rr_land_data
+    return {'rr_radius': rr_radius, 'rr_land_data': rr_land_data}
 
 
 def main():

@@ -139,3 +139,22 @@ def generate_square_img(src):
     squared_img = cv.copyMakeBorder(src, padding[0], padding[1], padding[2], padding[3], cv.BORDER_CONSTANT,
                                     value=(255, 255, 255))
     return squared_img
+
+
+def convert_contour_to_pts(cnt):
+    """将contour转换成point"""
+
+    # 将轮廓转换成近似的多边形，按周长的0.1计算，如果不准确可以调小一些，例如0.05
+    # 采用approx之后，返回值从1m变为45kb
+    epsilon = 0.1 * cv.arcLength(cnt, True)
+    approx_cnt = cv.approxPolyDP(cnt, epsilon, True)
+
+    pts = []
+    for pt in approx_cnt:
+        pt_dict = {
+            "xAxis": int(pt[0][0]),
+            "yAxis": int(pt[0][1])
+        }
+        pts.append(pt_dict)
+
+    return pts

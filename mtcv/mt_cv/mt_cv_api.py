@@ -41,6 +41,6 @@ async def land_color(img_path: str):
 
     Raises:
     """
-    rr_land_data = hcp.process(image_util.img_abs_path('/images' + img_path))
+    hot_cold_data = hcp.process(image_util.img_abs_path('/images' + img_path))
 
-    return rr_land_data
+    return {'hot_cold_data': hot_cold_data}
