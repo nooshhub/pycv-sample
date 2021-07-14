@@ -163,10 +163,10 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
                     continue
 
                 # Contour Approximation to reduce points and save calculation time
-                epsilonCC = 0.1 * cv.arcLength(chunked_land, True)
-                approxCC = cv.approxPolyDP(chunked_land, epsilonCC, True)
+                epsilon_cc = 0.1 * cv.arcLength(chunked_land, True)
+                approx_cc = cv.approxPolyDP(chunked_land, epsilon_cc, True)
 
-                retval = is_chunked_land_in_rr(approxCC, rr)
+                retval = is_chunked_land_in_rr(approx_cc, rr)
 
                 if retval:
                     rr_ratio = round(cc_area / rr_area * 100, 2)
