@@ -122,8 +122,8 @@ def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
         mask = cv.inRange(land_region, lower, upper)
 
         # 过滤出于颜色匹配的色块
-        nonZeroCount = cv.countNonZero(mask)
-        if nonZeroCount == 0:
+        non_zero_count = cv.countNonZero(mask)
+        if non_zero_count == 0:
             continue
 
         contours, hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
