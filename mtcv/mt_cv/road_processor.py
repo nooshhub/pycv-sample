@@ -22,37 +22,32 @@ def find_roi_contours(src):
     return sorted_cnts
 
 
-def find_all_land_contours(src):
+def find_road(src):
     """找出所有的地块轮廓
     """
-    copy = src.copy()
-    contours = find_external_contours(copy)
-    return contours
+    src = src.copy()
 
-
-def find_external_contours(src):
-    """找出所有外部轮廓
-
-    Args:
-        src: 输入图片必须是白色背景的图片
-
-    Returns:
-        所有外部轮廓
-    """
     gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
     # 二值化，将不是白色的都变为黑色
     ret, thresh1 = cv.threshold(gray, 254, 255, cv.THRESH_BINARY)
+    image_util.show_img('thresh1', thresh1)
 
-    kernel = np.ones((7, 7), np.uint8)
-    morph = cv.morphologyEx(thresh1, cv.MORPH_CLOSE, kernel)
+    # hough lines
+    lines = cv.HoughLinesP(thresh1, 1, np.pi / 180, 100, minLineLength=300, maxLineGap=50)
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        cv.line(src, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-    # TODO threshold怎么计算的？
-    edges = cv.Canny(morph, 100, 200)
-    # edges找出来，但是是锯齿状，会在找轮廓时形成很多点，这里加一道拉普拉斯锐化一下
-    edges = cv.Laplacian(edges, -1, (3, 3))
-
-    contours = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
-    return contours
+    image_util.show_img('src', src)
+    # kernel = np.ones((7, 7), np.uint8)
+    # morph = cv.morphologyEx(thresh1, cv.MORPH_CLOSE, kernel)
+    # cv.imshow('morph', morph)
+    #
+    # # TODO threshold怎么计算的？
+    # edges = cv.Canny(morph, 100, 200)
+    # # edges找出来，但是是锯齿状，会在找轮廓时形成很多点，这里加一道拉普拉斯锐化一下
+    # edges = cv.Laplacian(edges, -1, (3, 3))
+    # cv.imshow('edges', edges)
 
 
 def find_color_regions_for_all_lands(img_white_bg, land_cnts, debug=False, debug_from=0, debug_len=3):
@@ -93,7 +88,8 @@ def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
         debug: 开启debug
 
     """
-    land_color_dict = {'area': cv.contourArea(land_cnt), 'points': image_util.convert_contour_to_pts(land_cnt), 'children': []}
+    land_color_dict = {'area': cv.contourArea(land_cnt), 'points': image_util.convert_contour_to_pts(land_cnt),
+                       'children': []}
 
     land_region = image_util.get_roi_by_contour(img_white_bg, land_cnt)
     if debug:
@@ -146,7 +142,7 @@ def find_land_region(img_white_bg):
     img = cv.imread(roi_img_path)
     # TODO 找出最大的是总地块，目前将图片按照轮廓排序，取最大面积的
     sorted_cnts = find_roi_contours(img)
-    root_region = image_util.get_roi_by_contour(img_white_bg, sorted_cnts[0])
+    root_region = image_util.get_roi_by_contour(img_white_bg, sorted_cnts[0], use_white_bg=False)
     return root_region
 
 
@@ -176,30 +172,17 @@ def process(img_path):
         raise Exception('image path must be absolute')
 
     img_white_bg = cv.imread(img_path)
-
-    #TODO resize as hot code?
-
     land_region = find_land_region(img_white_bg)
     scale = find_scale(img_white_bg)
 
     # 找出地块
-    land_cnts = find_all_land_contours(land_region)
+    find_road(land_region)
 
-    e1 = cv.getTickCount()
-
-    # 通过颜色来检测地块内色块
-    # land_dict = find_color_regions_for_all_lands(img_white_bg, land_cnts, debug=True, debugLen=1)
-    land_dict = find_color_regions_for_all_lands(img_white_bg, land_cnts)
-
-    e2 = cv.getTickCount()
-    time = (e2 - e1) / cv.getTickFrequency()
-    print('takes ', time)
-
-    return land_dict
+    return {'todo': 'road'}
 
 
 def main():
-    img_path = '/images/id1/id1_part.png'
+    img_path = '/images/id1/id1.png'
     print(image_util.img_abs_path(img_path))
 
     land_dict = process(image_util.img_abs_path(img_path))

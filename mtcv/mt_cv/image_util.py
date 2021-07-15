@@ -55,7 +55,7 @@ def find_bgr_colors(src, cnts):
     return colors
 
 
-def get_roi_by_contour(src, cnt):
+def get_roi_by_contour(src, cnt, use_white_bg=True):
     """获取ROI
 
     根据输入的contour来截取ROI(region of interest)
@@ -63,6 +63,7 @@ def get_roi_by_contour(src, cnt):
     Args:
         src: 输入图片
         cnt: 轮廓
+        use_white_bg: 使用白色背景，False使用黑色背景
 
     Returns:
         白色背景的ROI
@@ -73,6 +74,9 @@ def get_roi_by_contour(src, cnt):
     mask = np.zeros(copy.shape[:2], np.uint8)
     mask = cv.fillConvexPoly(mask, cnt, (255, 255, 255))
     roi = cv.bitwise_and(copy, copy, mask=mask)
+
+    if not use_white_bg:
+        return roi
 
     # 将ROI以外的部分填充为白色
     mask = cv.bitwise_not(mask)
@@ -158,3 +162,8 @@ def convert_contour_to_pts(cnt):
         pts.append(pt_dict)
 
     return pts
+
+
+def show_img(name, src):
+    resize_src = resize_img(src)
+    cv.imshow(name, resize_src)
