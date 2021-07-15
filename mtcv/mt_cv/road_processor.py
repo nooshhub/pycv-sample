@@ -26,19 +26,27 @@ def find_road(src):
     """找出所有的地块轮廓
     """
     src = src.copy()
-
+    src = image_util.resize_img(src, 600)
     gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
     # 二值化，将不是白色的都变为黑色
     ret, thresh1 = cv.threshold(gray, 254, 255, cv.THRESH_BINARY)
     image_util.show_img('thresh1', thresh1)
 
     # hough lines
-    lines = cv.HoughLinesP(thresh1, 1, np.pi / 180, 100, minLineLength=300, maxLineGap=50)
-    for line in lines:
-        x1, y1, x2, y2 = line[0]
-        cv.line(src, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    lines = cv.HoughLinesP(thresh1, cv.HOUGH_PROBABILISTIC, np.pi / 180, 1, minLineLength=60, maxLineGap=10)
+
+    # for line in lines:
+    #     x1, y1, x2, y2 = line[0]
+    #     cv.line(src, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+    for x in range(0, len(lines)):
+        for x1, y1, x2, y2 in lines[x]:
+            # cv2.line(src,(x1,y1),(x2,y2),(0,128,0),2, cv2.LINE_AA)
+            pts = np.array([[x1, y1], [x2, y2]], np.int32)
+            cv.polylines(src, [pts], True, (0, 255, 0))
 
     image_util.show_img('src', src)
+
     # kernel = np.ones((7, 7), np.uint8)
     # morph = cv.morphologyEx(thresh1, cv.MORPH_CLOSE, kernel)
     # cv.imshow('morph', morph)
