@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 import json
-from mt_cv import color_data, image_util
+from mt_cv import color_data, image_util, color_util
 import os
 
 
@@ -129,7 +129,7 @@ def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
         for color_cnt in contours:
             color_dict = {'area': cv.contourArea(color_cnt),
                           'points': image_util.convert_contour_to_pts(color_cnt),
-                          'color': bgr}
+                          'color': color_util.convert_bgr_to_rgb_str(bgr)}
             color_dicts.append(color_dict)
         land_color_dict['children'].extend(color_dicts)
 
