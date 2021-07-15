@@ -180,8 +180,7 @@ def process(img_path):
     scale = find_scale(img_white_bg)
 
     # 找出地块
-    copy = land_region.copy()
-    land_cnts = find_all_land_contours(copy)
+    land_cnts = find_all_land_contours(land_region)
 
     e1 = cv.getTickCount()
 
