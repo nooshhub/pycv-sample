@@ -146,7 +146,7 @@ def convert_contour_to_pts(cnt):
 
     # 将轮廓转换成近似的多边形，按周长的0.1计算，如果不准确可以调小一些，例如0.05
     # 采用approx之后，返回值从1m变为45kb
-    epsilon = 0.1 * cv.arcLength(cnt, True)
+    epsilon = 0.01 * cv.arcLength(cnt, True)
     approx_cnt = cv.approxPolyDP(cnt, epsilon, True)
 
     pts = []
