@@ -357,6 +357,9 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 docker images
 docker rmi -f 50fa88577b3c
 docker rmi -f mtcv
+# 删除的镜像无用的垃圾image
+docker rmi $(docker images -f "dangling=true" -q)
+docker images prune -f
 
 # 删除之前无用的容器
 docker ps -a
@@ -401,11 +404,13 @@ RUN apt-get install 'ffmpeg'\
 
 
 
+todo: 代码仓库迁移到私有，后续的代码会涉及到更多的商业信息
 
+todo: 去除商业相关的所有数据和代码
 
 todo：缺少快捷查看日志的功能
 
-todo：增加requirements.txt简化Dockerfile
+todo：增加requirements.txt简化Dockerfile，限制所有依赖的版本,减少版本升级带来的风险
 
 todo: 将固定的依赖打成一个image，这样不用每次都下载
 
@@ -425,7 +430,13 @@ todo:返回值的形式是否可以改一下
 [727, 2027]
 ```
 
+todo：项目交接文档
 
+todo：添加copyright到文件头部
+
+todo：添加测试
+
+todo：添加api的自省能力，返回示例数据
 
 
 
