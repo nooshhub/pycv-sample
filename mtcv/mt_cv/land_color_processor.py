@@ -13,17 +13,21 @@ def find_all_land_contours(src):
     Returns:
         所有地块轮廓
     """
-
     gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
-    # 二值化，将不是白色的都变为黑色
-    ret, thresh1 = cv.threshold(gray, 254, 255, cv.THRESH_BINARY)
 
-    kernel = np.ones((3, 3), np.uint8)
-    morph = cv.morphologyEx(thresh1, cv.MORPH_CLOSE, kernel)
-    cv.imshow("compare images", np.hstack([image_util.resize_img(gray), image_util.resize_img(morph)]))
+    # 二值化，将不是白色的都变为黑色
+    ret, thresh1 = cv.threshold(gray, 226, 255, cv.THRESH_BINARY_INV)
+
+    kernel = np.ones((5, 5), np.uint8)
+    # dst = cv.morphologyEx(thresh1, cv.MORPH_OPEN, kernel)
+
+    # dst = cv.dilate(thresh1, kernel, iterations=2)
+    dst = cv.erode(thresh1, kernel, iterations=1)
+
+    cv.imshow("compare images", np.hstack([image_util.resize_img(gray), image_util.resize_img(thresh1)]))
 
     # TODO threshold怎么计算的？
-    edges = cv.Canny(morph, 100, 200)
+    edges = cv.Canny(dst, 100, 200)
     # edges找出来，但是是锯齿状，会在找轮廓时形成很多点，这里加一道拉普拉斯锐化一下
     edges = cv.Laplacian(edges, -1, (3, 3))
 
@@ -120,12 +124,13 @@ def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, debug=False)
     return land_color_dict
 
 
-def process(img_path, bgr_colors):
+def process(img_path, bgr_colors, debug=False):
     """处理图片
 
     Args:
         img_path: 图片路径
         bgr_colors: 色块颜色
+        debug: debug
     """
     src = cv.imread(img_path)
 
@@ -135,8 +140,10 @@ def process(img_path, bgr_colors):
     e1 = cv.getTickCount()
 
     # 通过颜色来检测地块内色块
-    # land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, debug=True, debug_len=None)
-    land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors)
+    if debug:
+        land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, debug=debug, debug_len=None)
+    else:
+        land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors)
 
     e2 = cv.getTickCount()
     time = (e2 - e1) / cv.getTickFrequency()
@@ -150,7 +157,8 @@ def main():
     file_name = 'land_region.png'
     img_path = '../images/' + id + '/' + file_name
 
-    land_dict = process(img_path, color_data.bgr_colors)
+    land_dict = process(img_path, color_data.bgr_colors, debug=True)
+    # land_dict = process(img_path, color_data.bgr_colors)
 
     json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
     print(json_data)

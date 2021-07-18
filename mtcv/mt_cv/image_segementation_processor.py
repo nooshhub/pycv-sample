@@ -39,9 +39,9 @@ def process(img_id, file_name, img_path):
     img = cv.imread(img_path)
 
     # 重置图片大小
-    # img_max_size = 2000
-    # if img.shape[1] > img_max_size:
-    #     img = image_util.resize_img(img, fixed_width=img_max_size)
+    img_max_size = 2000
+    if img.shape[1] > img_max_size:
+        img = image_util.resize_img(img, fixed_width=img_max_size)
 
     # 找出地块，颜色样例块，比例尺块，从大到小
     roi_rects = find_roi_rect(img)

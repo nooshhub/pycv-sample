@@ -61,6 +61,7 @@ def get_roi_by_rect(src, roi_rect):
     """ROI = image[y1:y2, x1:x2]"""
     return src[roi_rect[0]:roi_rect[1], roi_rect[2]:roi_rect[3]]
 
+
 def bgr_with_threshold(bgr, threshold):
     """根据threshold重新计算BGR的值
 
