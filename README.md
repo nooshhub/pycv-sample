@@ -238,6 +238,14 @@ https://www.cs.toronto.edu/~hinton/absps/road_detection.pdf
 
 https://towardsdatascience.com/satellite-coasts-detection-model-with-python-and-opencv-28d1b4b8474e
 
+hough line polylines
+
+https://answers.opencv.org/question/185375/how-do-i-detect-the-curvy-lines-in-opencv/
+
+尝试角点
+
+尝试将所有点连成图，或者按照中心线直接找ROI，也就是靠近中心线和在中心线上的地块即可
+
 
 
 
