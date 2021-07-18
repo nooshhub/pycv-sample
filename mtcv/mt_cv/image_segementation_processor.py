@@ -58,13 +58,13 @@ def process(img_id, file_name, img_path):
     color_region_path = '../images/' + img_id + '/color_region' + file_extension
     cv.imwrite(color_region_path, color_region)
 
-    scale_region_path = '../images/' + img_id + '/sacle_region' + file_extension
+    scale_region_path = '../images/' + img_id + '/scale_region' + file_extension
     cv.imwrite(scale_region_path, sacle_region)
 
     return {
         'land_region': land_region_path,
         'color_region': color_region_path,
-        'sacle_region': scale_region_path,
+        'scale_region': scale_region_path,
     }
 
 

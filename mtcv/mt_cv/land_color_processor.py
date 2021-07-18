@@ -24,7 +24,7 @@ def find_all_land_contours(src):
     # dst = cv.dilate(thresh1, kernel, iterations=2)
     dst = cv.erode(thresh1, kernel, iterations=1)
 
-    cv.imshow("compare images", np.hstack([image_util.resize_img(gray), image_util.resize_img(thresh1)]))
+    # cv.imshow("compare images", np.hstack([image_util.resize_img(gray), image_util.resize_img(thresh1)]))
 
     # TODO threshold怎么计算的？
     edges = cv.Canny(dst, 100, 200)
@@ -32,10 +32,6 @@ def find_all_land_contours(src):
     edges = cv.Laplacian(edges, -1, (3, 3))
 
     contours = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
-
-    copy = src.copy()
-    cv.drawContours(copy, contours, -1, (255, 0, 0), 1)
-    cv.imshow('contours', image_util.resize_img(copy))
 
     return contours
 
