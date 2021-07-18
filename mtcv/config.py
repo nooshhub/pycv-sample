@@ -6,10 +6,10 @@ import platform
 # MTCV_HOME = 'D:/anaconda3/pycv-sample/mtcv'
 
 # 家
-# MTCV_HOME = 'D:/opencv/pynotebook/mtcv'
+MTCV_HOME = 'D:/opencv/pynotebook/mtcv'
 
 # server use root /
-MTCV_HOME = ''
+# MTCV_HOME = ''
 
 if __name__ == '__main__':
     print(platform.system())

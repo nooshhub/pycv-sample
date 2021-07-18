@@ -1,25 +1,6 @@
 import numpy as np
 import cv2 as cv
-import json
-from mt_cv import color_data, image_util, color_util
-import os
-
-
-def find_roi_contours(src):
-    """找出ROI，用于分割原图
-
-    原图有四块区域，一个是地块区域，一个是颜色示例区域，一个距离标尺区域，一个南北方向区域
-    理论上倒排后的最大轮廓的是地块区域
-    """
-    copy = src.copy()
-    gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
-
-    # 低于thresh都变为黑色，maxval是给binary用的
-    # 白底 254, 255 黑底 0, 255
-    threshold = cv.threshold(gray, 0, 255, cv.THRESH_BINARY)[1]
-    contours, hierarchy = cv.findContours(threshold, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    sorted_cnts = sorted(contours, key=cv.contourArea, reverse=True)
-    return sorted_cnts
+from mt_cv import image_util
 
 
 def find_road(src):
@@ -57,146 +38,24 @@ def find_road(src):
     # edges = cv.Laplacian(edges, -1, (3, 3))
     # cv.imshow('edges', edges)
 
-
-def find_color_regions_for_all_lands(img_white_bg, land_cnts, debug=False, debug_from=0, debug_len=3):
-    """使用颜色来分块，并返回所有地块和色块父子关系
-
-    Args:
-        img_white_bg: 输入图片，白色背景
-        land_cnts: 地块轮廓
-        debug: 开启debug，只演示前三个地块的识别过程，可以通过debugFrom:debugLen来调整debug开始位置和长度
-        debug_from: debug开始位置
-        debug_len: debug长度
-    """
-
-    # 过滤掉面积小于100的轮廓
-    filtered_land_cnts = [cnt for cnt in land_cnts if cv.contourArea(cnt) > 100]
-
-    land_dict = {'area': 0, 'data': []}
-
-    if debug:
-        filtered_land_cnts = filtered_land_cnts[debug_from:debug_len]
-
-    total_area = 0
-    for land_cnt in filtered_land_cnts:
-        total_area += cv.contourArea(land_cnt)
-        land_data = find_color_regions_for_land(img_white_bg, land_cnt, debug)
-        land_dict['data'].append(land_data)
-
-    land_dict['area'] = total_area
-    return land_dict
-
-
-def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
-    """使用颜色来找出单个地块内的色块
-
-    Args:
-        img_white_bg: 输入图片，白色背景
-        land_cnt: 地块轮廓
-        debug: 开启debug
-
-    """
-    land_color_dict = {'area': cv.contourArea(land_cnt), 'points': image_util.convert_contour_to_pts(land_cnt),
-                       'children': []}
-
-    land_region = image_util.get_roi_by_contour(img_white_bg, land_cnt)
-    if debug:
-        cv.imshow("land regions", np.hstack([image_util.resize_img(img_white_bg), image_util.resize_img(land_region)]))
-
-    color_cnts = []
-    for bgr in color_data.bgr_colors:
-        # 图片里的颜色可能和示例颜色不相等，适当增加点阈值来防色差
-        threshold = 5
-        lower = np.array(image_util.bgr_with_threshold(bgr, -threshold), dtype="uint8")
-        upper = np.array(image_util.bgr_with_threshold(bgr, threshold), dtype="uint8")
-        # 根据阈值找到对应颜色区域，黑底白块
-        mask = cv.inRange(land_region, lower, upper)
-
-        # 过滤出于颜色匹配的色块
-        non_zero_count = cv.countNonZero(mask)
-        if non_zero_count == 0:
-            continue
-
-        contours, hierarchy = cv.findContours(mask.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-        # 单个地块内的也可能包含多个相同色块，使用extend插入到color_cnts列表里
-        color_cnts.extend(contours)
-
-        if debug:
-            # 黑白变白黑
-            mask_inv = 255 - mask
-            # 展示图片
-            output = cv.bitwise_and(land_region, land_region, mask=mask_inv)
-            cv.imshow("compare images", np.hstack([image_util.resize_img(land_region), image_util.resize_img(output)]))
-            cv.waitKey(0)
-
-        color_dicts = []
-        for color_cnt in contours:
-            color_dict = {'area': cv.contourArea(color_cnt),
-                          'points': image_util.convert_contour_to_pts(color_cnt),
-                          'color': color_util.convert_bgr_to_rgb_str(bgr)}
-            color_dicts.append(color_dict)
-        land_color_dict['children'].extend(color_dicts)
-
-    return land_color_dict
-
-
-def find_land_region(img_white_bg):
-    """找出总地块
-
-    Args:
-        img_white_bg: 输入图片
-    """
-    roi_img_path = image_util.img_abs_path('/images/id1/id1_roi.png')
-    img = cv.imread(roi_img_path)
-    # TODO 找出最大的是总地块，目前将图片按照轮廓排序，取最大面积的
-    sorted_cnts = find_roi_contours(img)
-    root_region = image_util.get_roi_by_contour(img_white_bg, sorted_cnts[0], use_white_bg=False)
-    return root_region
-
-
-def find_scale(img_white_bg):
-    """找出比例尺, 获取像素和千米的比例
-
-    Args:
-        img_white_bg: 输入图片
-
-    Returns:
-        ratio = pixel / meter
-    """
-    # TODO 找出比例尺轮廓
-    px_to_1km = 670
-    px_km_scale = px_to_1km / 1000
-    # print(1 / (px_km_scale * px_km_scale))
-    return px_km_scale
-
-
 def process(img_path):
     """处理图片
 
     Args:
         img_path: 图片路径
     """
-    if not os.path.isabs(img_path):
-        raise Exception('image path must be absolute')
-
-    img_white_bg = cv.imread(img_path)
-    land_region = find_land_region(img_white_bg)
-    scale = find_scale(img_white_bg)
+    img = cv.imread(img_path)
 
     # 找出地块
-    find_road(land_region)
+    find_road(img)
 
     return {'todo': 'road'}
 
 
 def main():
     img_path = '/images/id1/id1.png'
-    print(image_util.img_abs_path(img_path))
 
     land_dict = process(image_util.img_abs_path(img_path))
-
-    json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
-    print(json_data)
 
     cv.waitKey(0)
     cv.destroyAllWindows()

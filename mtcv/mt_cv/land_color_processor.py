@@ -2,49 +2,25 @@ import numpy as np
 import cv2 as cv
 import json
 from mt_cv import color_data, image_util, color_util
-import os
-
-
-def find_roi_contours(src):
-    """找出ROI，用于分割原图
-
-    原图有四块区域，一个是地块区域，一个是颜色示例区域，一个距离标尺区域，一个南北方向区域
-    理论上倒排后的最大轮廓的是地块区域
-    """
-    copy = src.copy()
-    gray = cv.cvtColor(copy, cv.COLOR_BGR2GRAY)
-
-    # 低于thresh都变为黑色，maxval是给binary用的
-    # 白底 254, 255 黑底 0, 255
-    threshold = cv.threshold(gray, 0, 255, cv.THRESH_BINARY)[1]
-    contours, hierarchy = cv.findContours(threshold, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    sorted_cnts = sorted(contours, key=cv.contourArea, reverse=True)
-    return sorted_cnts
 
 
 def find_all_land_contours(src):
-    """找出所有的地块轮廓
-    """
-    copy = src.copy()
-    contours = find_external_contours(copy)
-    return contours
-
-
-def find_external_contours(src):
-    """找出所有外部轮廓
+    """找出所有地块轮廓
 
     Args:
         src: 输入图片必须是白色背景的图片
 
     Returns:
-        所有外部轮廓
+        所有地块轮廓
     """
+
     gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
     # 二值化，将不是白色的都变为黑色
     ret, thresh1 = cv.threshold(gray, 254, 255, cv.THRESH_BINARY)
 
-    kernel = np.ones((7, 7), np.uint8)
+    kernel = np.ones((3, 3), np.uint8)
     morph = cv.morphologyEx(thresh1, cv.MORPH_CLOSE, kernel)
+    cv.imshow("compare images", np.hstack([image_util.resize_img(gray), image_util.resize_img(morph)]))
 
     # TODO threshold怎么计算的？
     edges = cv.Canny(morph, 100, 200)
@@ -52,15 +28,21 @@ def find_external_contours(src):
     edges = cv.Laplacian(edges, -1, (3, 3))
 
     contours = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
+
+    copy = src.copy()
+    cv.drawContours(copy, contours, -1, (255, 0, 0), 1)
+    cv.imshow('contours', image_util.resize_img(copy))
+
     return contours
 
 
-def find_color_regions_for_all_lands(img_white_bg, land_cnts, debug=False, debug_from=0, debug_len=3):
+def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, debug=False, debug_from=0, debug_len=3):
     """使用颜色来分块，并返回所有地块和色块父子关系
 
     Args:
         img_white_bg: 输入图片，白色背景
         land_cnts: 地块轮廓
+        bgr_colors: 色块颜色
         debug: 开启debug，只演示前三个地块的识别过程，可以通过debugFrom:debugLen来调整debug开始位置和长度
         debug_from: debug开始位置
         debug_len: debug长度
@@ -77,30 +59,32 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, debug=False, debug
     total_area = 0
     for land_cnt in filtered_land_cnts:
         total_area += cv.contourArea(land_cnt)
-        land_data = find_color_regions_for_land(img_white_bg, land_cnt, debug)
+        land_data = find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, debug)
         land_dict['data'].append(land_data)
 
     land_dict['area'] = total_area
     return land_dict
 
 
-def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
+def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, debug=False):
     """使用颜色来找出单个地块内的色块
 
     Args:
         img_white_bg: 输入图片，白色背景
         land_cnt: 地块轮廓
+        bgr_colors: 色块颜色
         debug: 开启debug
 
     """
-    land_color_dict = {'area': cv.contourArea(land_cnt), 'points': image_util.convert_contour_to_pts(land_cnt), 'children': []}
+    land_color_dict = {'area': cv.contourArea(land_cnt), 'points': image_util.convert_contour_to_pts(land_cnt),
+                       'children': []}
 
     land_region = image_util.get_roi_by_contour(img_white_bg, land_cnt)
     if debug:
         cv.imshow("land regions", np.hstack([image_util.resize_img(img_white_bg), image_util.resize_img(land_region)]))
 
     color_cnts = []
-    for bgr in color_data.bgr_colors:
+    for bgr in bgr_colors:
         # 图片里的颜色可能和示例颜色不相等，适当增加点阈值来防色差
         threshold = 5
         lower = np.array(image_util.bgr_with_threshold(bgr, -threshold), dtype="uint8")
@@ -136,60 +120,23 @@ def find_color_regions_for_land(img_white_bg, land_cnt, debug=False):
     return land_color_dict
 
 
-def find_land_region(img_white_bg):
-    """找出总地块
-
-    Args:
-        img_white_bg: 输入图片
-    """
-    roi_img_path = image_util.img_abs_path('/images/id1/id1_roi.png')
-    img = cv.imread(roi_img_path)
-    # TODO 找出最大的是总地块，目前将图片按照轮廓排序，取最大面积的
-    sorted_cnts = find_roi_contours(img)
-    root_region = image_util.get_roi_by_contour(img_white_bg, sorted_cnts[0])
-    return root_region
-
-
-def find_scale(img_white_bg):
-    """找出比例尺, 获取像素和千米的比例
-
-    Args:
-        img_white_bg: 输入图片
-
-    Returns:
-        ratio = pixel / meter
-    """
-    # TODO 找出比例尺轮廓
-    px_to_1km = 670
-    px_km_scale = px_to_1km / 1000
-    # print(1 / (px_km_scale * px_km_scale))
-    return px_km_scale
-
-
-def process(img_path):
+def process(img_path, bgr_colors):
     """处理图片
 
     Args:
         img_path: 图片路径
+        bgr_colors: 色块颜色
     """
-    if not os.path.isabs(img_path):
-        raise Exception('image path must be absolute')
-
-    img_white_bg = cv.imread(img_path)
-
-    #TODO resize as hot code?
-
-    land_region = find_land_region(img_white_bg)
-    scale = find_scale(img_white_bg)
+    src = cv.imread(img_path)
 
     # 找出地块
-    land_cnts = find_all_land_contours(land_region)
+    land_cnts = find_all_land_contours(src)
 
     e1 = cv.getTickCount()
 
     # 通过颜色来检测地块内色块
-    # land_dict = find_color_regions_for_all_lands(img_white_bg, land_cnts, debug=True, debugLen=1)
-    land_dict = find_color_regions_for_all_lands(img_white_bg, land_cnts)
+    # land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, debug=True, debug_len=None)
+    land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors)
 
     e2 = cv.getTickCount()
     time = (e2 - e1) / cv.getTickFrequency()
@@ -199,10 +146,11 @@ def process(img_path):
 
 
 def main():
-    img_path = '/images/id1/id1_part.png'
-    print(image_util.img_abs_path(img_path))
+    id = 'id2'
+    file_name = 'land_region.png'
+    img_path = '../images/' + id + '/' + file_name
 
-    land_dict = process(image_util.img_abs_path(img_path))
+    land_dict = process(img_path, color_data.bgr_colors)
 
     json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
     print(json_data)

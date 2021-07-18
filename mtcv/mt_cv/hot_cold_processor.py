@@ -228,13 +228,12 @@ def show_cnt_id(cnts, img, img_name):
 
 def process_with_rr(squared_img, rr_radius, debug=False):
     """处理图像
-    生成一张带有功能半径的示例图像
-    生成一张用于计算冷热分区的图像
 
     Args:
         squared_img: 正方形图像
         rr_radius: 供能半径
-        debug: 调式，默认False关闭
+        debug: 调式，默认False关闭,
+            Ture 生成一张带有功能半径的示例图像, 生成一张用于计算冷热分区的图像
 
     Raises:
         ZeroDivisionError: division by zero
@@ -307,39 +306,45 @@ def process_with_rr(squared_img, rr_radius, debug=False):
     return rr_land_data
 
 
-def process(img_abs_path):
-    """读入并处理图像"""
-    src = cv.imread(img_abs_path)
-    src_width = src.shape[1]
+def process(img_path, scale, px_rr_ratio, debug=False):
+    """冷热分区
+
+    Args:
+        img_path: 图片路径
+        scale: 比例尺的像素1km对应的像素
+        px_rr_ratio: 功能半径是几千米
+
+    Returns:
+        冷热分区信息
+
+    """
+    src = cv.imread(img_path)
+    # src_width = src.shape[1]
 
     # resize有助于提升处理速度
     # TODO 测试不同像素的处理速度，在800像素时效果最佳，识别率100%，17s左右
-    fixed_width = 800
-    src = image_util.resize_img(src, fixed_width=fixed_width)
+    # fixed_width = 800
+    # src = image_util.resize_img(src, fixed_width=fixed_width)
 
     # TODO 填充为正方形，可以用于分类切割后的图片的填充，便于找边界，这里对原图填充显得多余
     # squared_img = generate_square_img(src)
     squared_img = src
 
-    # TODO 从比例尺中获取像素和实际距离的比例
-    # TODO 实际总地块长度也可以减少画出的供能方块，从而减少匹配时需要的个数
-    # TODO 抠图后生成的 地块 方向 颜色 比例尺的小图也可以加速图片的处理，所以图片分类切割的第一步很重要
-    # TODO 分割后的地块色块信息也是可以用来优化切割地块和原始地块的匹配速度的
-    # 1km = 670 pixels
-    src_scale = 670
-    resized_scale = round(src_scale / (src_width / fixed_width))
-    rr_radius = resized_scale
-
     # 处理图像
-    rr_land_data = process_with_rr(squared_img, rr_radius)
-    return {'rr_radius': rr_radius, 'rr_land_data': rr_land_data}
+    rr_radius = scale * px_rr_ratio
+    rr_land_data = process_with_rr(squared_img, rr_radius, debug=debug)
+    return {'rr_land_data': rr_land_data}
 
 
 def main():
-    # 读取图片
-    img_abs_path = image_util.img_abs_path('/images/id1/id1.png')
+    id = 'id2'
+    file_name = 'land_region.png'
+    img_path = '../images/' + id + '/' + file_name
 
-    process(img_abs_path)
+    scale = 200
+    px_rr_ratio = 1
+
+    process(img_path, scale, px_rr_ratio, debug=True)
 
     cv.waitKey(0)
     cv.destroyAllWindows()

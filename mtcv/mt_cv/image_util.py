@@ -22,39 +22,6 @@ def resize_img(src, fixed_width=800):
     return img
 
 
-def find_bgr_colors(src, cnts):
-    """找出颜色示例里的颜色BGR
-
-    根据限定长，高，比例来过滤出实例颜色区域
-
-    Args:
-        src: 输入图像
-        cnts: 轮廓
-
-    Returns:
-        bgr colors
-    """
-    w_range = [170, 180]
-    h_range = [75, 85]
-    ratio_range = [0.40, 0.50]
-    colors = []
-
-    for cnt in cnts:
-        x, y, w, h = cv.boundingRect(cnt)
-        ratio = round(h / w, 2)
-
-        if ratio_range[0] < ratio < ratio_range[1] and w_range[0] < w < w_range[1] and h_range[0] < h < h_range[1]:
-            # print(ratio,x,y,w,h)
-            # 因为，原图色块矩形的周边和mask出来的颜色区都有模糊渐变的线
-            # 无法使用cv.mean(colorRegion, meanMask)来计算实际颜色
-            # 所以，取矩形的中心点的颜色最为准确
-            cx, cy = round(x + w / 2), round(y + h / 2)
-            bgr = src[cy, cx]
-            colors.append(bgr)
-
-    return colors
-
-
 def get_roi_by_contour(src, cnt, use_white_bg=True):
     """获取ROI
 
@@ -89,6 +56,10 @@ def get_roi_by_contour(src, cnt, use_white_bg=True):
 
     return roi_with_white_bg
 
+
+def get_roi_by_rect(src, roi_rect):
+    """ROI = image[y1:y2, x1:x2]"""
+    return src[roi_rect[0]:roi_rect[1], roi_rect[2]:roi_rect[3]]
 
 def bgr_with_threshold(bgr, threshold):
     """根据threshold重新计算BGR的值
