@@ -132,6 +132,7 @@ def process(img_path, bgr_colors, debug=False):
 
     # 去掉湖泊
     src[np.where((src == [255, 255, 127]).all(axis=2))] = [255, 255, 255]
+    # cv.imshow('src', src)
 
     # 找出地块
     land_cnts = find_all_land_contours(src)
