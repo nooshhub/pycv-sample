@@ -13,6 +13,8 @@ def download_img(image_url, destination):
         with urllib.request.urlopen(image_url) as response:
             f.write(response.read())
 
+    return id, file_name, img_path
+
 
 def check_folder(folder_path):
     d = os.path.dirname(folder_path)
@@ -22,5 +24,9 @@ def check_folder(folder_path):
 
 if __name__ == '__main__':
     image_url = 'http://x/file/demo2.2.png'
-    destination = '/tmp'
-    download_img(image_url, destination)
+    # destination = '/tmp'
+    # download_img(image_url, destination)
+    import pathlib
+    print(pathlib.Path(image_url).name)
+    print(pathlib.Path(image_url).suffix)
+    print(pathlib.Path(image_url).suffixes)
