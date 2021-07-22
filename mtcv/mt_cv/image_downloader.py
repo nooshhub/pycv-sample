@@ -1,32 +1,40 @@
 import os
 import urllib.request
+import uuid
+import pathlib
 
 
-def download_img(image_url, destination):
-    """根据图片的url下载图片，如果图片已经下载，删除已经存在的，然后更新为最新图片"""
-    img_folder = '../images'
-    image_file_name = 'idx.png'
-    image_path = img_folder + destination + '/' + image_file_name
-    check_folder(image_path)
+def download_img(image_url):
+    """根据图片的url下载图片
 
+    Args：
+        image_url: 图片URL
+
+    """
+
+    # 准备存储图片信息，文件夹唯一，图片默认为original.png
+    folder_name = uuid.uuid4()
+    image_extension = pathlib.Path(image_url).suffix
+    image_file_name = 'original' + image_extension
+    image_folder = '../images/tmp/' + str(folder_name)
+    image_path = image_folder + '/' + image_file_name
+
+    # 创建文件夹
+    d = os.path.dirname(image_path)
+    if not os.path.exists(d):
+        os.makedirs(d)
+
+    # 下载图片
     with open(image_path, 'wb') as f:
         with urllib.request.urlopen(image_url) as response:
             f.write(response.read())
 
-    return id, file_name, img_path
-
-
-def check_folder(folder_path):
-    d = os.path.dirname(folder_path)
-    if not os.path.exists(d):
-        os.makedirs(d)
+    return folder_name, image_path
 
 
 if __name__ == '__main__':
-    image_url = 'http://x/file/demo2.2.png'
-    # destination = '/tmp'
-    # download_img(image_url, destination)
-    import pathlib
-    print(pathlib.Path(image_url).name)
-    print(pathlib.Path(image_url).suffix)
-    print(pathlib.Path(image_url).suffixes)
+    image_url = 'http://172.20.171.245/file/demo2.2.png'
+    download_img(image_url)
+
+
+

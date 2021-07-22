@@ -3,7 +3,8 @@ from mt_cv import land_color_processor as lcp, \
     image_util, \
     hot_cold_processor as hcp, \
     image_segementation_processor as isp, \
-    color_region_processor as crp
+    color_region_processor as crp, \
+    image_downloader as img_dl
 
 router = APIRouter(
     prefix="/mt/cv",
@@ -12,34 +13,31 @@ router = APIRouter(
 
 
 @router.post("/land_color", summary="输入图片URL，返回地块与颜色信息")
-async def land_color(img_id: str, img_url: str):
+async def land_color(img_url: str):
     """地块与色块信息
 
     Args:
-        img_id: 图片id
         img_url: 图片URL
     Returns:
         地块与色块信息
 
     Raises:
     """
-    # TODO 根据img_url下载图片
+    # 根据img_url下载图片
+    folder_name, image_path = img_dl.download_img(img_url)
 
     # 对下载的图片进行分割
-    img_id = 'id2'
-    file_name = 'id2.png'
-    img_path = '../images/' + img_id + '/' + file_name
-    land_color_scale_dict = isp.process(img_id, file_name, img_path)
+    land_region_path, color_region_path, scale_region_path = isp.process(folder_name, image_path)
 
     # 根据分割后的图片，获取颜色
-    bgr_colors = crp.process(land_color_scale_dict['color_region'])
+    bgr_colors = crp.process(color_region_path)
 
     # TODO 根据分割后的图片，获取比例尺的像素
-    # scale = find_scale(src)
+    # scale = find_scale(scale_region_path)
     scale = 670
 
     # 从分割后的图片计算地块和色块信息
-    land_color_data = lcp.process(land_color_scale_dict['land_region'], bgr_colors)
+    land_color_data = lcp.process(land_region_path, bgr_colors)
 
     return {
         # "direction": 'N',

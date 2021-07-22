@@ -27,12 +27,11 @@ def find_roi_rect(src):
     return rois
 
 
-def process(img_id, file_name, img_path):
-    """分割图片，并将分割手的图片存储到'../images/' + id目录下
+def process(folder_name, img_path):
+    """分割图片，并将图片存储到当前图片的目录下
 
     Args:
-        img_id: 图片id
-        file_name: 图片名称
+        folder_name: 图片文件夹
         img_path: 图片路径
     """
 
@@ -50,32 +49,27 @@ def process(img_id, file_name, img_path):
     sacle_region = image_util.get_roi_by_rect(img, roi_rects[2])
 
     # 保存三张图片到images目录
-    file_extension = pathlib.Path(file_name).suffix
+    file_extension = pathlib.Path(img_path).suffix
 
-    land_region_path = '../images/' + img_id + '/land_region' + file_extension
+    land_region_path = '../images/tmp/' + folder_name + '/land_region' + file_extension
     cv.imwrite(land_region_path, land_region)
 
-    color_region_path = '../images/' + img_id + '/color_region' + file_extension
+    color_region_path = '../images/tmp/' + folder_name + '/color_region' + file_extension
     cv.imwrite(color_region_path, color_region)
 
-    scale_region_path = '../images/' + img_id + '/scale_region' + file_extension
+    scale_region_path = '../images/tmp/' + folder_name + '/scale_region' + file_extension
     cv.imwrite(scale_region_path, sacle_region)
 
-    return {
-        'land_region': land_region_path,
-        'color_region': color_region_path,
-        'scale_region': scale_region_path,
-    }
+    return land_region_path, color_region_path, scale_region_path
 
 
 def main():
     # TODO 通过网络拉取图片
     # TODO 存储到临时目录，然后进行处理
-    id = 'id2'
-    file_name = 'id2.png'
-    img_path = '../images/' + id + '/' + file_name
+    folder_name = '6700df9c-b425-40d5-9e7c-e934ecf52d48'
+    img_path = '../images/tmp/' + folder_name + '/original.png'
 
-    process(id, file_name, img_path)
+    process(folder_name, img_path)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
