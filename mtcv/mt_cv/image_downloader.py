@@ -3,6 +3,7 @@ import urllib.request
 
 
 def download_img(image_url, destination):
+    """根据图片的url下载图片，如果图片已经下载，删除已经存在的，然后更新为最新图片"""
     img_folder = '../images'
     image_file_name = 'idx.png'
     image_path = img_folder + destination + '/' + image_file_name
