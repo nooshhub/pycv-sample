@@ -120,12 +120,13 @@ def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, debug=False)
     return land_color_dict
 
 
-def process(img_path, bgr_colors, debug=False):
+def process(img_path, bgr_colors, scale, debug=False):
     """处理图片
 
     Args:
         img_path: 图片路径
         bgr_colors: 色块颜色
+        scale: 比例尺像素
         debug: debug
     """
     src = cv.imread(img_path)
@@ -153,12 +154,13 @@ def process(img_path, bgr_colors, debug=False):
 
 
 def main():
-    id = 'id2'
-    file_name = 'land_region.png'
-    img_path = '../images/' + id + '/' + file_name
 
-    land_dict = process(img_path, color_data.bgr_colors, debug=True)
-    # land_dict = process(img_path, color_data.bgr_colors)
+    image_folder = '../images/tmp/6700df9c-b425-40d5-9e7c-e934ecf52d48'
+    img_path = image_folder + '/land_region.png'
+    scale = 147
+
+    land_dict = process(img_path, color_data.bgr_colors, scale, debug=True)
+    # land_dict = process(img_path, color_data.bgr_colors, scale)
 
     json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
     print(json_data)

@@ -4,6 +4,7 @@ from mt_cv import land_color_processor as lcp, \
     hot_cold_processor as hcp, \
     image_segmentation_processor as isp, \
     color_region_processor as crp, \
+    scale_region_processor as srp, \
     image_downloader as img_dl
 
 router = APIRouter(
@@ -32,20 +33,19 @@ async def land_color(img_url: str):
     # 根据分割后的图片，获取颜色
     bgr_colors = crp.process(color_region_path)
 
-    # TODO 根据分割后的图片，获取比例尺的像素
-    # scale = find_scale(scale_region_path)
-    scale = 670
+    # 根据分割后的图片，获取比例尺的像素
+    scale = srp.process(scale_region_path)
 
     # 从分割后的图片计算地块和色块信息
-    land_color_data = lcp.process(land_region_path, bgr_colors)
+    land_color_data = lcp.process(land_region_path, bgr_colors, scale)
 
     # 清理图片
     img_dl.clean_img(image_folder)
 
     return {
         # "direction": 'N',
-        # "colors": {'value': [255, 0, 0], 'label': '商场'},
-        # "scale": {'pixel': 670, 'meter': 1000},
+        "bgr_colors": bgr_colors,
+        "scale": {'pixel': scale, 'meter': 1000},
         "land_color_data": land_color_data,
     }
 
