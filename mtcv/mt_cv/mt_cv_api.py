@@ -24,10 +24,10 @@ async def land_color(img_url: str):
     Raises:
     """
     # 根据img_url下载图片
-    folder_name, image_path = img_dl.download_img(img_url)
+    image_folder, image_path, image_path = img_dl.download_img(img_url)
 
     # 对下载的图片进行分割
-    land_region_path, color_region_path, scale_region_path = isp.process(folder_name, image_path)
+    land_region_path, color_region_path, scale_region_path = isp.process(image_folder, image_path, image_path)
 
     # 根据分割后的图片，获取颜色
     bgr_colors = crp.process(color_region_path)
@@ -38,6 +38,9 @@ async def land_color(img_url: str):
 
     # 从分割后的图片计算地块和色块信息
     land_color_data = lcp.process(land_region_path, bgr_colors)
+
+    # 清理图片
+    img_dl.clean_img(image_folder)
 
     return {
         # "direction": 'N',

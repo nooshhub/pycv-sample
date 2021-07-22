@@ -2,6 +2,7 @@ import os
 import urllib.request
 import uuid
 import pathlib
+import shutil
 
 
 def download_img(image_url):
@@ -29,12 +30,24 @@ def download_img(image_url):
         with urllib.request.urlopen(image_url) as response:
             f.write(response.read())
 
-    return folder_name, image_path
+    return image_folder, image_path
+
+
+def clean_img(image_folder):
+    """删除下载的图片以及文件夹
+
+    Args:
+        image_folder: 图片文件夹
+    """
+    try:
+        shutil.rmtree(image_folder)
+    except OSError as e:
+        print("Error: %s : %s" % (image_folder, e.strerror))
 
 
 if __name__ == '__main__':
     image_url = 'http://172.20.171.245/file/demo2.2.png'
-    download_img(image_url)
-
+    image_folder, image_path = download_img(image_url)
+    clean_img(image_folder)
 
 

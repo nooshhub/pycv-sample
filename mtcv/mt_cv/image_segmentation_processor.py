@@ -27,11 +27,11 @@ def find_roi_rect(src):
     return rois
 
 
-def process(folder_name, img_path):
+def process(image_folder, img_path):
     """分割图片，并将图片存储到当前图片的目录下
 
     Args:
-        folder_name: 图片文件夹
+        image_folder: 图片文件夹
         img_path: 图片路径
     """
 
@@ -51,25 +51,23 @@ def process(folder_name, img_path):
     # 保存三张图片到images目录
     file_extension = pathlib.Path(img_path).suffix
 
-    land_region_path = '../images/tmp/' + folder_name + '/land_region' + file_extension
+    land_region_path = image_folder + '/land_region' + file_extension
     cv.imwrite(land_region_path, land_region)
 
-    color_region_path = '../images/tmp/' + folder_name + '/color_region' + file_extension
+    color_region_path = image_folder + '/color_region' + file_extension
     cv.imwrite(color_region_path, color_region)
 
-    scale_region_path = '../images/tmp/' + folder_name + '/scale_region' + file_extension
+    scale_region_path = image_folder + '/scale_region' + file_extension
     cv.imwrite(scale_region_path, sacle_region)
 
     return land_region_path, color_region_path, scale_region_path
 
 
 def main():
-    # TODO 通过网络拉取图片
-    # TODO 存储到临时目录，然后进行处理
-    folder_name = '6700df9c-b425-40d5-9e7c-e934ecf52d48'
-    img_path = '../images/tmp/' + folder_name + '/original.png'
+    image_folder = '../images/tmp/6700df9c-b425-40d5-9e7c-e934ecf52d48'
+    img_path = image_folder + '/original.png'
 
-    process(folder_name, img_path)
+    process(image_folder, img_path)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
