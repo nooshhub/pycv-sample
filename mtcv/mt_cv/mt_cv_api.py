@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from mt_cv import land_color_processor as lcp, \
     image_util, \
     hot_cold_processor as hcp, \
-    image_segementation_processor as isp, \
+    image_segmentation_processor as isp, \
     color_region_processor as crp, \
     image_downloader as img_dl
 
