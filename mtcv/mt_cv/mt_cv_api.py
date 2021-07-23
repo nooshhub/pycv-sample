@@ -5,9 +5,9 @@ from mt_cv import land_color_processor as lcp, \
     image_segmentation_processor as isp, \
     color_region_processor as crp, \
     scale_region_processor as srp, \
-    image_downloader as img_dl
-from pydantic import BaseModel
-from typing import List, Optional
+    image_downloader as img_dl, \
+    image_generator as img_gen
+from mt_cv.mt_cv_api_model import InputData
 
 router = APIRouter(
     prefix="/mt/cv",
@@ -30,7 +30,7 @@ async def land_color(img_url: str):
     image_folder, image_path, image_path = img_dl.download_img(img_url)
 
     # 对下载的图片进行分割
-    land_region_path, color_region_path, scale_region_path = isp.process(image_folder, image_path, image_path)
+    land_region_path, color_region_path, scale_region_path = isp.process(image_folder, image_path)
 
     # 根据分割后的图片，获取颜色
     bgr_colors = crp.process(color_region_path)
@@ -47,36 +47,31 @@ async def land_color(img_url: str):
     return {
         # "direction": 'N',
         # "bgr_colors": bgr_colors,
-        "scale": {'pixel': scale, 'meter': 1000},
+        "scale": {'pixel': scale, 'km': 1},
         "land_color_data": land_color_data,
         "image_width_height": image_width_height
     }
 
 
-class LandColorData(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    price: Optional[float] = None
-    tax: float = 10.5
-    tags: List[str] = []
-
-
-@router.post("/hot_cold", summary="输入图片路径，返回冷热分区信息，地块按供能方块分组")
-async def land_color(img_path: str):
-    """地块按供能方块分组信息
+@router.post("/hot_cold", summary="按照图像，地块，比例尺数据，返回冷热分区信息，地块按供能方块分组")
+async def hot_cold(input_data: InputData):
+    """按照图像，地块，比例尺数据生成图片，然后进行分组
 
     Args:
-        img_path: 图片路径
-        TODO 假设img_path是/id1/id1.png
+        input_data: 图像，地块，比例尺数据
     Returns:
-        地块与色块信息
+        冷热地块数据
 
     Raises:
     """
 
-    # TODO 根据输入数据，生成图片
-    img_path = '生成的图片路径'
+    # 根据输入数据，生成图片
+    image_folder, image_path = img_gen.generate(input_data)
 
-    hot_cold_data = hcp.process(image_util.img_abs_path('/images' + img_path))
+    # 生成冷热地块数据
+    hot_cold_data = hcp.process(image_path)
+
+    # 清理图片
+    img_dl.clean_img(image_folder)
 
     return {'hot_cold_data': hot_cold_data}

@@ -306,33 +306,23 @@ def process_with_rr(squared_img, rr_radius, debug=False):
     return rr_land_data
 
 
-def process(img_path, scale, px_rr_ratio, debug=False):
+def process(img_path, scale, km, debug=False):
     """冷热分区
 
     Args:
         img_path: 图片路径
         scale: 比例尺的像素1km对应的像素
-        px_rr_ratio: 功能半径是几千米
+        km: 功能半径是几千米
 
     Returns:
         冷热分区信息
 
     """
     src = cv.imread(img_path)
-    # src_width = src.shape[1]
-
-    # resize有助于提升处理速度
-    # TODO 测试不同像素的处理速度，在800像素时效果最佳，识别率100%，17s左右
-    # fixed_width = 800
-    # src = image_util.resize_img(src, fixed_width=fixed_width)
-
-    # TODO 填充为正方形，可以用于分类切割后的图片的填充，便于找边界，这里对原图填充显得多余
-    # squared_img = generate_square_img(src)
-    squared_img = src
 
     # 处理图像
-    rr_radius = scale * px_rr_ratio
-    rr_land_data = process_with_rr(squared_img, rr_radius, debug=debug)
+    rr_radius = scale * km
+    rr_land_data = process_with_rr(src, rr_radius, debug=debug)
     return {'rr_land_data': rr_land_data}
 
 
@@ -342,9 +332,9 @@ def main():
     img_path = '../images/' + id + '/' + file_name
 
     scale = 200
-    px_rr_ratio = 1
+    km = 1
 
-    process(img_path, scale, px_rr_ratio, debug=True)
+    process(img_path, scale, km, debug=True)
 
     cv.waitKey(0)
     cv.destroyAllWindows()

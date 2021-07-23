@@ -51,7 +51,9 @@ def find_all_land_contours(src):
     return contours
 
 
-def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale, debug=False, debug_from=0, debug_len=3):
+def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale,
+                                     debug=False, debug_from=0, debug_len=3,
+                                     print_land_data=False):
     """使用颜色来分块，并返回所有地块和色块父子关系
 
     Args:
@@ -62,6 +64,7 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale,
         debug: 开启debug，只演示前三个地块的识别过程，可以通过debugFrom:debugLen来调整debug开始位置和长度
         debug_from: debug开始位置
         debug_len: debug长度
+        print_land_data: 打印地块数据，为生成冷热分区的图片做准备
     """
 
     # 过滤掉面积小于100的轮廓
@@ -72,9 +75,18 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale,
     if debug:
         filtered_land_cnts = filtered_land_cnts[debug_from:debug_len]
 
-    for land_cnt in filtered_land_cnts:
-        land_data = find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug)
-        land_data_list.append(land_data)
+    if print_land_data:
+        land_data_for_hot_cold = []
+        for index, land_cnt in enumerate(filtered_land_cnts):
+            land_data = {'id': index, 'points': image_util.convert_contour_to_pts(land_cnt)}
+            land_data_for_hot_cold.append(land_data)
+        json_data = json.dumps(land_data_for_hot_cold, sort_keys=True, indent=4, separators=(',', ': '))
+        print(json_data)
+
+    else:
+        for land_cnt in filtered_land_cnts:
+            land_data = find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug)
+            land_data_list.append(land_data)
 
     return land_data_list
 
@@ -137,7 +149,7 @@ def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug
     return land_color_dict
 
 
-def process(img_path, bgr_colors, scale, debug=False):
+def process(img_path, bgr_colors, scale, debug=False, debug_len=3, print_land_data=False):
     """处理图片
 
     Args:
@@ -145,6 +157,8 @@ def process(img_path, bgr_colors, scale, debug=False):
         bgr_colors: 色块颜色
         scale: 比例尺像素
         debug: debug
+        debug_len: debug长度
+        print_land_data: 打印地块数据，为生成冷热分区的图片做准备
     """
     src = cv.imread(img_path)
     image_width_height = {'width': src.shape[1], 'height': src.shape[0]}
@@ -155,7 +169,7 @@ def process(img_path, bgr_colors, scale, debug=False):
     # 找出总地块
     total_land_cnt = find_total_land_contour(src)
     # 总面积包含道路面积
-    total_land_dict = {'area': round(cv.contourArea(total_land_cnt)/scale), 'data': []}
+    total_land_dict = {'area': round(cv.contourArea(total_land_cnt) / scale), 'data': []}
 
     # 找出地块
     land_cnts = find_all_land_contours(src)
@@ -164,7 +178,12 @@ def process(img_path, bgr_colors, scale, debug=False):
 
     # 通过颜色来检测地块内色块
     if debug:
-        land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale, debug=debug, debug_len=None)
+        land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale,
+                                                          debug=debug, debug_len=debug_len,
+                                                          print_land_data=print_land_data)
+    elif print_land_data:
+        land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale,
+                                                          print_land_data=True)
     else:
         land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale)
 
@@ -178,16 +197,17 @@ def process(img_path, bgr_colors, scale, debug=False):
 
 
 def main():
-
-    image_folder = '../images/tmp/702b699e-f9a3-465b-a2b0-072662cf4f35'
+    image_folder = '../images/tmp/6700df9c-b425-40d5-9e7c-e934ecf52d48'
     img_path = image_folder + '/land_region.png'
     scale = 147
 
-    # land_dict = process(img_path, color_data.bgr_colors, scale, debug=True)
-    land_dict = process(img_path, color_data.bgr_colors, scale)
+    # land_dict = process(img_path, color_data.bgr_colors, scale, debug=True, debug_len=None)
+    land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale, print_land_data=True)
+    print(image_width_height)
+    # land_dict = process(img_path, color_data.bgr_colors, scale)
 
-    json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
-    print(json_data)
+    # json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
+    # print(json_data)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
