@@ -19,14 +19,8 @@ def find_all_land_contours(src):
     ret, thresh1 = cv.threshold(gray, 226, 255, cv.THRESH_BINARY_INV)
 
     kernel = np.ones((5, 5), np.uint8)
-    # dst = cv.morphologyEx(thresh1, cv.MORPH_OPEN, kernel)
-
-    # dst = cv.dilate(thresh1, kernel, iterations=2)
     dst = cv.erode(thresh1, kernel, iterations=1)
 
-    # cv.imshow("compare images", np.hstack([image_util.resize_img(gray), image_util.resize_img(thresh1)]))
-
-    # TODO threshold怎么计算的？
     edges = cv.Canny(dst, 100, 200)
     # edges找出来，但是是锯齿状，会在找轮廓时形成很多点，这里加一道拉普拉斯锐化一下
     edges = cv.Laplacian(edges, -1, (3, 3))
