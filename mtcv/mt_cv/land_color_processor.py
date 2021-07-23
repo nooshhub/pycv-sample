@@ -36,13 +36,14 @@ def find_all_land_contours(src):
     return contours
 
 
-def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, debug=False, debug_from=0, debug_len=3):
+def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale, debug=False, debug_from=0, debug_len=3):
     """使用颜色来分块，并返回所有地块和色块父子关系
 
     Args:
         img_white_bg: 输入图片，白色背景
         land_cnts: 地块轮廓
         bgr_colors: 色块颜色
+        scale: 比例尺像素
         debug: 开启debug，只演示前三个地块的识别过程，可以通过debugFrom:debugLen来调整debug开始位置和长度
         debug_from: debug开始位置
         debug_len: debug长度
@@ -56,23 +57,25 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, debug=
     if debug:
         filtered_land_cnts = filtered_land_cnts[debug_from:debug_len]
 
+    # TODO 重做，总面积包含道路面积
     total_area = 0
     for land_cnt in filtered_land_cnts:
         total_area += cv.contourArea(land_cnt)
-        land_data = find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, debug)
+        land_data = find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug)
         land_dict['data'].append(land_data)
 
     land_dict['area'] = total_area
     return land_dict
 
 
-def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, debug=False):
+def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug=False):
     """使用颜色来找出单个地块内的色块
 
     Args:
         img_white_bg: 输入图片，白色背景
         land_cnt: 地块轮廓
         bgr_colors: 色块颜色
+        scale: 比例尺像素
         debug: 开启debug
 
     """
@@ -111,7 +114,7 @@ def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, debug=False)
 
         color_dicts = []
         for color_cnt in contours:
-            color_dict = {'area': cv.contourArea(color_cnt),
+            color_dict = {'area': round(cv.contourArea(color_cnt)/scale),
                           'points': image_util.convert_contour_to_pts(color_cnt),
                           'color': color_util.convert_bgr_to_rgb_str(bgr)}
             color_dicts.append(color_dict)
@@ -130,6 +133,7 @@ def process(img_path, bgr_colors, scale, debug=False):
         debug: debug
     """
     src = cv.imread(img_path)
+    image_width_height = {'width': src.shape[0], 'height': src.shape[1]}
 
     # 去掉湖泊
     src[np.where((src == [255, 255, 127]).all(axis=2))] = [255, 255, 255]
@@ -142,20 +146,20 @@ def process(img_path, bgr_colors, scale, debug=False):
 
     # 通过颜色来检测地块内色块
     if debug:
-        land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, debug=debug, debug_len=None)
+        land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale, debug=debug, debug_len=None)
     else:
-        land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors)
+        land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale)
 
     e2 = cv.getTickCount()
     time = (e2 - e1) / cv.getTickFrequency()
     print('takes ', time)
 
-    return land_dict
+    return land_dict, image_width_height
 
 
 def main():
 
-    image_folder = '../images/tmp/6700df9c-b425-40d5-9e7c-e934ecf52d48'
+    image_folder = '../images/tmp/702b699e-f9a3-465b-a2b0-072662cf4f35'
     img_path = image_folder + '/land_region.png'
     scale = 147
 

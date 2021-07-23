@@ -48,6 +48,6 @@ def clean_img(image_folder):
 if __name__ == '__main__':
     image_url = 'http://172.20.171.245/file/demo2.2.png'
     image_folder, image_path = download_img(image_url)
-    clean_img(image_folder)
+    # clean_img(image_folder)
 
 

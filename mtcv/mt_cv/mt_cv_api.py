@@ -6,6 +6,8 @@ from mt_cv import land_color_processor as lcp, \
     color_region_processor as crp, \
     scale_region_processor as srp, \
     image_downloader as img_dl
+from pydantic import BaseModel
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/mt/cv",
@@ -37,17 +39,26 @@ async def land_color(img_url: str):
     scale = srp.process(scale_region_path)
 
     # 从分割后的图片计算地块和色块信息
-    land_color_data = lcp.process(land_region_path, bgr_colors, scale)
+    land_color_data, image_width_height = lcp.process(land_region_path, bgr_colors, scale)
 
     # 清理图片
     img_dl.clean_img(image_folder)
 
     return {
         # "direction": 'N',
-        "bgr_colors": bgr_colors,
+        # "bgr_colors": bgr_colors,
         "scale": {'pixel': scale, 'meter': 1000},
         "land_color_data": land_color_data,
+        "image_width_height": image_width_height
     }
+
+
+class LandColorData(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    tax: float = 10.5
+    tags: List[str] = []
 
 
 @router.post("/hot_cold", summary="输入图片路径，返回冷热分区信息，地块按供能方块分组")
@@ -62,6 +73,10 @@ async def land_color(img_path: str):
 
     Raises:
     """
+
+    # TODO 根据输入数据，生成图片
+    img_path = '生成的图片路径'
+
     hot_cold_data = hcp.process(image_util.img_abs_path('/images' + img_path))
 
     return {'hot_cold_data': hot_cold_data}

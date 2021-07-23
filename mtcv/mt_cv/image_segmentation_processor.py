@@ -64,7 +64,7 @@ def process(image_folder, img_path):
 
 
 def main():
-    image_folder = '../images/tmp/6700df9c-b425-40d5-9e7c-e934ecf52d48'
+    image_folder = '../images/tmp/702b699e-f9a3-465b-a2b0-072662cf4f35'
     img_path = image_folder + '/original.png'
 
     process(image_folder, img_path)
