@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
-import image_util
+
+from mt_cv import image_util
 
 
 def show_contours(img, contours, rect=False):

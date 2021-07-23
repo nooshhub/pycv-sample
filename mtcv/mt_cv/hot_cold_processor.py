@@ -327,11 +327,10 @@ def process(img_path, scale, km, debug=False):
 
 
 def main():
-    id = 'id2'
-    file_name = 'land_region.png'
-    img_path = '../images/' + id + '/' + file_name
+    image_folder = '../images/tmp/e54fe0fa-f2be-4f42-ae13-83b5a583fa70'
+    img_path = image_folder + '/hot_cold.png'
 
-    scale = 200
+    scale = 147
     km = 1
 
     process(img_path, scale, km, debug=True)

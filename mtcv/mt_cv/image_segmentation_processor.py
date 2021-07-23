@@ -1,6 +1,7 @@
 import cv2 as cv
 from mt_cv import image_util
 import pathlib
+from fastapi import HTTPException
 
 
 def find_roi_rect(src):
@@ -44,6 +45,10 @@ def process(image_folder, img_path):
 
     # 找出地块，颜色样例块，比例尺块，从大到小
     roi_rects = find_roi_rect(img)
+
+    if len(roi_rects) < 3:
+        raise HTTPException(status_code=400, detail="无法将图片分割成地块、色块、比例尺")
+
     land_region = image_util.get_roi_by_rect(img, roi_rects[0])
     color_region = image_util.get_roi_by_rect(img, roi_rects[1])
     sacle_region = image_util.get_roi_by_rect(img, roi_rects[2])

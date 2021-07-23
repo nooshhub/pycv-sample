@@ -141,3 +141,8 @@ def show_img(name, src):
     resize_src = resize_img(src)
     cv.imshow(name, resize_src)
 
+
+def calc_area(cnt, scale):
+    """计算轮廓实际面积，单位平方米"""
+    px_km_ratio = scale / 1000
+    return float(round(cv.contourArea(cnt) / (px_km_ratio * px_km_ratio), 4))

@@ -46,7 +46,8 @@ def process(img_path):
     contours, hierarchy = cv.findContours(threshold, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
     bgr_colros = find_bgr_colors(src, contours)
-    print(bgr_colros)
+    # print(bgr_colros)
+    return bgr_colros
 
 
 if __name__ == '__main__':

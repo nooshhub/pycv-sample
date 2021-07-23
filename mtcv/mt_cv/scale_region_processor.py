@@ -32,7 +32,8 @@ if __name__ == '__main__':
     image_folder = '../images/tmp/6700df9c-b425-40d5-9e7c-e934ecf52d48'
     img_path = image_folder + '/scale_region.png'
 
-    process(img_path)
+    scale = process(img_path)
+    print(scale)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
