@@ -1,7 +1,28 @@
 import numpy as np
 import cv2 as cv
 import json
-from mt_cv import color_data, image_util, color_util
+from mt_cv import color_data, image_util, color_util, test_util
+
+
+def find_total_land_contour(src):
+    """找出总地块轮廓
+
+    Args:
+        src: 输入图片必须是白色背景的图片
+
+    Returns:
+        所有地块轮廓
+    """
+    gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+
+    # 二值化，将不是白色的都变为黑色
+    ret, thresh1 = cv.threshold(gray, 226, 255, cv.THRESH_BINARY_INV)
+    # test_util.show_img('thresh1', thresh1)
+
+    contours = cv.findContours(thresh1, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
+    # test_util.show_contours(src, contours, rect=False)
+
+    return contours[0]
 
 
 def find_all_land_contours(src):
@@ -46,20 +67,16 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale,
     # 过滤掉面积小于100的轮廓
     filtered_land_cnts = [cnt for cnt in land_cnts if cv.contourArea(cnt) > 100]
 
-    land_dict = {'area': 0, 'data': []}
+    land_data_list = []
 
     if debug:
         filtered_land_cnts = filtered_land_cnts[debug_from:debug_len]
 
-    # TODO 重做，总面积包含道路面积
-    total_area = 0
     for land_cnt in filtered_land_cnts:
-        total_area += cv.contourArea(land_cnt)
         land_data = find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug)
-        land_dict['data'].append(land_data)
+        land_data_list.append(land_data)
 
-    land_dict['area'] = total_area
-    return land_dict
+    return land_data_list
 
 
 def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug=False):
@@ -73,7 +90,8 @@ def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug
         debug: 开启debug
 
     """
-    land_color_dict = {'area': cv.contourArea(land_cnt), 'points': image_util.convert_contour_to_pts(land_cnt),
+    land_color_dict = {'area': round(cv.contourArea(land_cnt) / scale),
+                       'points': image_util.convert_contour_to_pts(land_cnt),
                        'children': []}
 
     land_region = image_util.get_roi_by_contour(img_white_bg, land_cnt)
@@ -108,10 +126,12 @@ def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug
 
         color_dicts = []
         for color_cnt in contours:
-            color_dict = {'area': round(cv.contourArea(color_cnt)/scale),
-                          'points': image_util.convert_contour_to_pts(color_cnt),
-                          'color': color_util.convert_bgr_to_rgb_str(bgr)}
-            color_dicts.append(color_dict)
+            color_cnt_area = round(cv.contourArea(color_cnt) / scale)
+            if color_cnt_area > 0:
+                color_dict = {'area': color_cnt_area,
+                              'points': image_util.convert_contour_to_pts(color_cnt),
+                              'color': color_util.convert_bgr_to_rgb_str(bgr)}
+                color_dicts.append(color_dict)
         land_color_dict['children'].extend(color_dicts)
 
     return land_color_dict
@@ -127,11 +147,15 @@ def process(img_path, bgr_colors, scale, debug=False):
         debug: debug
     """
     src = cv.imread(img_path)
-    image_width_height = {'width': src.shape[0], 'height': src.shape[1]}
+    image_width_height = {'width': src.shape[1], 'height': src.shape[0]}
 
     # 去掉湖泊
     src[np.where((src == [255, 255, 127]).all(axis=2))] = [255, 255, 255]
-    # cv.imshow('src', src)
+
+    # 找出总地块
+    total_land_cnt = find_total_land_contour(src)
+    # 总面积包含道路面积
+    total_land_dict = {'area': round(cv.contourArea(total_land_cnt)/scale), 'data': []}
 
     # 找出地块
     land_cnts = find_all_land_contours(src)
@@ -140,15 +164,17 @@ def process(img_path, bgr_colors, scale, debug=False):
 
     # 通过颜色来检测地块内色块
     if debug:
-        land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale, debug=debug, debug_len=None)
+        land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale, debug=debug, debug_len=None)
     else:
-        land_dict = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale)
+        land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale)
 
     e2 = cv.getTickCount()
     time = (e2 - e1) / cv.getTickFrequency()
     print('takes ', time)
 
-    return land_dict, image_width_height
+    total_land_dict['data'] = land_data_list
+
+    return total_land_dict, image_width_height
 
 
 def main():
@@ -157,8 +183,8 @@ def main():
     img_path = image_folder + '/land_region.png'
     scale = 147
 
-    land_dict = process(img_path, color_data.bgr_colors, scale, debug=True)
-    # land_dict = process(img_path, color_data.bgr_colors, scale)
+    # land_dict = process(img_path, color_data.bgr_colors, scale, debug=True)
+    land_dict = process(img_path, color_data.bgr_colors, scale)
 
     json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
     print(json_data)

@@ -141,7 +141,3 @@ def show_img(name, src):
     resize_src = resize_img(src)
     cv.imshow(name, resize_src)
 
-
-def show_compare_img(img1, img2):
-    """显示两张图片进行对比"""
-    cv.imshow("compare images", np.hstack([resize_img(img1), resize_img(img2)]))

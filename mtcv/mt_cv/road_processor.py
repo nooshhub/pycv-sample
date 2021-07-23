@@ -1,6 +1,6 @@
 import numpy as np
 import cv2 as cv
-from mt_cv import image_util
+from mt_cv import image_util, test_util
 
 
 def find_road(src):
@@ -11,7 +11,7 @@ def find_road(src):
     gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
     # 二值化，将不是白色的都变为黑色
     ret, thresh1 = cv.threshold(gray, 254, 255, cv.THRESH_BINARY)
-    image_util.show_img('thresh1', thresh1)
+    test_util.show_img('thresh1', thresh1)
 
     # hough lines
     lines = cv.HoughLinesP(thresh1, cv.HOUGH_PROBABILISTIC, np.pi / 180, 1, minLineLength=60, maxLineGap=10)
@@ -26,7 +26,7 @@ def find_road(src):
             pts = np.array([[x1, y1], [x2, y2]], np.int32)
             cv.polylines(src, [pts], True, (0, 255, 0))
 
-    image_util.show_img('src', src)
+    test_util.show_img('src', src)
 
     # kernel = np.ones((7, 7), np.uint8)
     # morph = cv.morphologyEx(thresh1, cv.MORPH_CLOSE, kernel)
@@ -37,6 +37,7 @@ def find_road(src):
     # # edges找出来，但是是锯齿状，会在找轮廓时形成很多点，这里加一道拉普拉斯锐化一下
     # edges = cv.Laplacian(edges, -1, (3, 3))
     # cv.imshow('edges', edges)
+
 
 def process(img_path):
     """处理图片
