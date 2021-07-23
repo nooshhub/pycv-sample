@@ -311,6 +311,8 @@ open host_name
 put D:/anaconda3/pycv-sample/mtcv/Dockerfile /zhny2.0/mtcv/Dockerfile 
 # 目录
 put -r D:/anaconda3/pycv-sample/mtcv/ /zhny2.0/mtcv/
+# 下载
+get -r 
 ```
 
 [psftp 参考](https://jingyan.baidu.com/article/d169e18658995a436611d8ee.html)
