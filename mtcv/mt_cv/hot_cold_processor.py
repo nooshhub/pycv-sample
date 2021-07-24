@@ -1,7 +1,8 @@
 import numpy as np
 import cv2 as cv
 import sys
-from mt_cv import image_util, color_util
+from mt_cv import image_util, color_util, test_util
+import random
 
 
 def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False):
@@ -94,27 +95,47 @@ def find_external_contours(src):
     return contours
 
 
-def is_contour_intersect(original_image, contour1, contour2):
+def is_contour_intersect(original_image, chunked_land, land):
     """地块轮廓交集检查
     """
-    # Two separate contours trying to check intersection on
-    contours = [contour1, contour2]
 
-    # Create image filled with zeros the same size of original image
-    blank = np.zeros(original_image.shape[0:2])
+    # 随机抽取5个点，如果他们的颜色有1个以上相同，说明是chunked_land在land里
+    rnd_max = min(len(chunked_land), len(land))
 
-    # Copy each contour into its own image and fill it with '1'
-    image1 = cv.drawContours(blank.copy(), contours, 0, 1)
-    image2 = cv.drawContours(blank.copy(), contours, 1, 1)
+    count = 0
+    for i in range(5):
+        rnd_index = random.randint(0, rnd_max - 1)
+        cl_xy = chunked_land[rnd_index][0]
+        l_xy = land[rnd_index][0]
+        cl_color = original_image[cl_xy[1]][cl_xy[0]]
+        l_color = original_image[l_xy[1]][l_xy[0]]
+        if np.array_equal(cl_color, l_color):
+            count += 1
 
-    # Use the logical AND operation on the two images
-    # Since the two images had bitwise AND applied to it,
-    # there should be a '1' or 'True' where there was intersection
-    # and a '0' or 'False' where it didnt intersect
-    intersection = np.logical_and(image1, image2)
+    if count >= 1:
+        return True
+    else:
+        return False
 
-    # Check if there was a '1' in the intersection array
-    return intersection.any()
+    # 色彩比较法比轮廓交集法要快很多
+    # # Two separate contours trying to check intersection on
+    # contours = [chunked_land, land]
+    #
+    # # Create image filled with zeros the same size of original image
+    # blank = np.zeros(original_image.shape[0:2])
+    #
+    # # Copy each contour into its own image and fill it with '1'
+    # image1 = cv.drawContours(blank.copy(), contours, 0, 1)
+    # image2 = cv.drawContours(blank.copy(), contours, 1, 1)
+    #
+    # # Use the logical AND operation on the two images
+    # # Since the two images had bitwise AND applied to it,
+    # # there should be a '1' or 'True' where there was intersection
+    # # and a '0' or 'False' where it didnt intersect
+    # intersection = np.logical_and(image1, image2)
+    #
+    # # Check if there was a '1' in the intersection array
+    # return intersection.any()
 
 
 def is_chunked_land_in_rr(cc, rr):
@@ -131,7 +152,7 @@ def is_chunked_land_in_rr(cc, rr):
         return True
 
 
-def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
+def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, image_folder, debug=False):
     """获取供能半径和地块的关系
     地块按照供能半径分组，供能半径从左往右，从0开始展开
 
@@ -141,6 +162,8 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
         land_cnts: 地块轮廓
         chunked_land_cnts: 被功能半径切割后的地块轮廓
         rr_radius: 供能半径的长度
+        image_folder: image_folder
+        debug: debug
 
     Returns:
         rr_land_dict: RR to Origianl contours dictionary
@@ -184,6 +207,12 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
     # 存放地块和供能方块的关系
     land_rr_dict = {}
 
+    # 腐蚀下图片，使得彩色区域变大，方便使用轮廓取颜色, 因为轮廓可能不在地块里，导致颜色不匹配
+    kernel = np.ones((5, 5), np.uint8)
+    erode_hot_cold_img = cv.erode(hot_cold_img, kernel)
+    if debug:
+        image_util.generate_img(image_folder, 'erode_hot_cold_img.png', erode_hot_cold_img)
+
     # 根据切割的地块与供能方块的关系，以及未切割前的原始地块，来计算地块和供能方块关系
     for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
         for land_index, land in enumerate(land_cnts):
@@ -192,7 +221,7 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
             if chunked_land_index not in chunked_land_rr_dict:
                 continue
 
-            retval = is_contour_intersect(hot_cold_img, chunked_land, land)
+            retval = is_contour_intersect(erode_hot_cold_img, chunked_land, land)
 
             if retval:
                 rr = chunked_land_rr_dict[chunked_land_index]
@@ -278,7 +307,8 @@ def process_with_rr(src, rr_radius, image_folder, debug=False):
     e1 = cv.getTickCount()
 
     # 获取功能半径和地块的关联关系
-    rr_land_dict, land_rr_dict = get_rr_land_dict(copy_for_hot_cold, RR, land_cnts, chunked_land_cnts, rr_radius)
+    rr_land_dict, land_rr_dict = get_rr_land_dict(copy_for_hot_cold, RR, land_cnts, chunked_land_cnts, rr_radius,
+                                                  image_folder, debug=debug)
 
     e2 = cv.getTickCount()
     time = (e2 - e1) / cv.getTickFrequency()
@@ -296,8 +326,9 @@ def process_with_rr(src, rr_radius, image_folder, debug=False):
 
     if debug:
         # 将相同冷暖区的地块填充为同一种随机色
+        random_color_memo = set()
         for rr_index in rr_land_dict:
-            color = color_util.random_color()
+            color = color_util.random_color(random_color_memo)
             for land_index in rr_land_dict[rr_index]:
                 cv.fillConvexPoly(copy_for_hot_cold, land_cnts[land_index], color)
 
