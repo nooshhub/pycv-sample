@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 @router.post("/land_color", summary="输入图片URL，返回地块与颜色信息")
-async def land_color(img_url: str):
+def land_color(img_url: str):
     """地块与色块信息
 
     Args:
@@ -59,7 +59,7 @@ async def land_color(img_url: str):
 
 
 @router.post("/hot_cold", summary="按照图像，地块，比例尺数据，返回冷热分区信息，地块按供能方块分组")
-async def hot_cold(input_data: InputData):
+def hot_cold(input_data: InputData):
     """按照图像，地块，比例尺数据生成图片，然后进行分组
 
     Args:
