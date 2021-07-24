@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def convert_bgr_to_rgb_str(bgr_list):
     """将bgr列表转换成string
 
@@ -11,6 +14,12 @@ def convert_bgr_to_rgb_str(bgr_list):
     rgb_str = 'rgb(' + ','.join(rgb_str_list) + ')'
     # print(rgb_str)
     return rgb_str
+
+
+def random_color():
+    """生成随机颜色"""
+    b, g, r = np.random.randint(50, 250), np.random.randint(50, 250), np.random.randint(50, 250)
+    return b, g, r
 
 
 if __name__ == '__main__':

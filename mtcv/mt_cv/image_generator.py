@@ -6,7 +6,7 @@ from typing import List
 import numpy as np
 import cv2 as cv
 
-from mt_cv import test_util, image_util
+from mt_cv import test_util, image_util, color_util
 from mt_cv.test_land_data import test_input_data
 from mt_cv.mt_cv_api_model import InputData, LandData, MtImage, MtCoordinate, MtScale
 
@@ -22,8 +22,9 @@ def generate(input_data: InputData, debug=False):
             land_pts.append([pt.xAxis, pt.yAxis])
 
         cnt = np.array(land_pts, dtype=np.int32).reshape((-1, 1, 2))
-        cv.drawContours(img, [cnt], -1, (255, 0, 0), 2)
-        cv.fillConvexPoly(img, cnt, (127, 127, 127))
+        # cv.drawContours(img, [cnt], -1, (255, 0, 0), 2)
+        random_color = color_util.random_color()
+        cv.fillConvexPoly(img, cnt, random_color)
 
     folder_name = uuid.uuid4()
     image_file_name = 'hot_cold.png'
