@@ -136,12 +136,6 @@ def convert_contour_to_pts(cnt):
     return pts
 
 
-def show_img(name, src):
-    """显示一张图"""
-    resize_src = resize_img(src)
-    cv.imshow(name, resize_src)
-
-
 def calc_area(cnt, scale):
     """计算轮廓实际面积，单位平方米"""
     px_km_ratio = scale / 1000

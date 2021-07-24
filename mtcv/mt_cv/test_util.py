@@ -23,16 +23,25 @@ def show_contours(img, contours, rect=False):
                        cv.LINE_AA)
         else:
             cv.drawContours(img, [i], -1, (255, 0, 0), 2)
-    cv.imshow("detect", image_util.resize_img(img))
-    cv.waitKey(0)
+
+    show_img("detect", img)
 
 
 def show_img(name, src):
     """显示一张图"""
-    resize_src = image_util.resize_img(src)
-    cv.imshow(name, resize_src)
+    if src.shape[0] > 1000:
+        resize_src = image_util.resize_img(src)
+        cv.imshow(name, resize_src)
+    else:
+        cv.imshow(name, src)
 
 
 def show_compare_img(img1, img2):
     """显示两张图片进行对比"""
-    cv.imshow("compare images", np.hstack([image_util.resize_img(img1), image_util.resize_img(img2)]))
+    if img1.shape[0] > 1000:
+        cv.imshow("compare images", np.hstack([image_util.resize_img(img1), image_util.resize_img(img2)]))
+    else:
+        cv.imshow("compare images", np.hstack([img1, img2]))
+    cv.waitKey(0)
+
+
