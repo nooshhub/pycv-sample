@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import os
 import config
 
 
@@ -140,3 +141,27 @@ def calc_area(cnt, scale):
     """计算轮廓实际面积，单位平方米"""
     px_km_ratio = scale / 1000
     return float(round(cv.contourArea(cnt) / (px_km_ratio * px_km_ratio), 4))
+
+
+def generate_img(image_folder, image_file_name, img):
+    """生成图片到tmp下对应的目录
+
+    Args:
+        image_folder, ：文件夹名
+        image_file_name：文件名
+        img：输入图片
+
+    Returns:
+        生成的图片路径
+    """
+    image_path = image_folder + '/' + image_file_name
+
+    # 创建文件夹
+    d = os.path.dirname(image_path)
+    if not os.path.exists(d):
+        os.makedirs(d)
+
+    # 创建图片
+    cv.imwrite(image_path, img)
+
+    return image_path

@@ -28,14 +28,8 @@ def generate(input_data: InputData, debug=False):
     folder_name = uuid.uuid4()
     image_file_name = 'hot_cold.png'
     image_folder = image_util.img_abs_path('/images/tmp/' + str(folder_name))
-    image_path = image_folder + '/' + image_file_name
 
-    # 创建文件夹
-    d = os.path.dirname(image_path)
-    if not os.path.exists(d):
-        os.makedirs(d)
-
-    cv.imwrite(image_path, img)
+    image_path = image_util.generate_img(image_folder, image_file_name, img)
 
     if debug:
         generated_img = cv.imread(image_path)
