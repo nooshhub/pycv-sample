@@ -16,9 +16,18 @@ def convert_bgr_to_rgb_str(bgr_list):
     return rgb_str
 
 
-def random_color():
+def random_color(memo=None):
     """生成随机颜色"""
+
     b, g, r = np.random.randint(50, 250), np.random.randint(50, 250), np.random.randint(50, 250)
+
+    if memo is not None:
+        color_str = "_".join([str(b), str(g), str(r)])
+        while color_str in memo:
+            b, g, r = np.random.randint(50, 250), np.random.randint(50, 250), np.random.randint(50, 250)
+            color_str = "_".join([str(b), str(g), str(r)])
+        memo.add(color_str)
+
     return b, g, r
 
 
