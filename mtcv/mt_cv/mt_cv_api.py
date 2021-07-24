@@ -16,11 +16,12 @@ router = APIRouter(
 
 
 @router.post("/land_color", summary="输入图片URL，返回地块与颜色信息")
-def land_color(img_url: str):
+def land_color(img_url: str = 'http://localhost:8002/images/demo/demo3_1.png', land_data_only: bool = False):
     """地块与色块信息
 
     Args:
         img_url: 图片URL
+        land_data_only: True只返回地块信息，用于计算冷热分区
     Returns:
         地块与色块信息
 
@@ -43,19 +44,31 @@ def land_color(img_url: str):
         raise HTTPException(status_code=500, detail="无法识别比例尺")
 
     # 从分割后的图片计算地块和色块信息
-    land_color_data, image_width_height = lcp.process(land_region_path, bgr_colors, scale)
+    land_color_data, image_width_height = lcp.process(land_region_path, bgr_colors, scale,
+                                                      land_data_only=land_data_only)
     # TODO 添加地块的一些校验
 
     # 清理图片
-    img_dl.clean_img(image_folder)
+    # img_dl.clean_img(image_folder)
 
-    return {
-        # "direction": 'N',
-        # "bgr_colors": bgr_colors,
-        "scale": {'pixel': int(scale), 'km': int(1)},
-        "land_color_data": land_color_data,
-        "image_data": image_width_height
-    }
+    if land_data_only:
+        response_data = {
+            # "direction": 'N',
+            # "bgr_colors": bgr_colors,
+            "scale": {'pixel': int(scale), 'km': int(1)},
+            "land_data": land_color_data['data'],
+            "img_data": image_width_height
+        }
+    else:
+        response_data = {
+            # "direction": 'N',
+            # "bgr_colors": bgr_colors,
+            "scale": {'pixel': int(scale), 'km': int(1)},
+            "land_color_data": land_color_data,
+            "image_data": image_width_height
+        }
+
+    return response_data
 
 
 @router.post("/hot_cold", summary="按照图像，地块，比例尺数据，返回冷热分区信息，地块按供能方块分组")
@@ -78,6 +91,6 @@ def hot_cold(input_data: InputData):
     hot_cold_data = hcp.process(image_path, scale.pixel, scale.km)
 
     # 清理图片
-    img_dl.clean_img(image_folder)
+    # img_dl.clean_img(image_folder)
 
     return {'hot_cold_data': hot_cold_data}

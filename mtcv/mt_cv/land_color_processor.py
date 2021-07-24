@@ -53,7 +53,7 @@ def find_all_land_contours(src):
 
 def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale,
                                      debug=False, debug_from=0, debug_len=3,
-                                     print_land_data=False):
+                                     land_data_only=False):
     """使用颜色来分块，并返回所有地块和色块父子关系
 
     Args:
@@ -64,7 +64,7 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale,
         debug: 开启debug，只演示前三个地块的识别过程，可以通过debugFrom:debugLen来调整debug开始位置和长度
         debug_from: debug开始位置
         debug_len: debug长度
-        print_land_data: 打印地块数据，为生成冷热分区的图片做准备
+        land_data_only: 只返回地块数据，为生成冷热分区的图片做准备
     """
 
     # 过滤掉面积小于100的轮廓
@@ -75,13 +75,11 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale,
     if debug:
         filtered_land_cnts = filtered_land_cnts[debug_from:debug_len]
 
-    if print_land_data:
-        land_data_for_hot_cold = []
+    if land_data_only:
+        land_data_list = []
         for index, land_cnt in enumerate(filtered_land_cnts):
             land_data = {'id': index, 'points': image_util.convert_contour_to_pts(land_cnt)}
-            land_data_for_hot_cold.append(land_data)
-        json_data = json.dumps(land_data_for_hot_cold, sort_keys=True, indent=4, separators=(',', ': '))
-        print(json_data)
+            land_data_list.append(land_data)
 
     else:
         for land_cnt in filtered_land_cnts:
@@ -149,8 +147,8 @@ def find_color_regions_for_land(img_white_bg, land_cnt, bgr_colors, scale, debug
     return land_color_dict
 
 
-def process(img_path, bgr_colors, scale, debug=False, debug_len=3, print_land_data=False):
-    """处理图片
+def process(img_path, bgr_colors, scale, debug=False, debug_len=3, land_data_only=False):
+    """处理图片，返回地块，色块，以及图片宽高
 
     Args:
         img_path: 图片路径
@@ -158,7 +156,7 @@ def process(img_path, bgr_colors, scale, debug=False, debug_len=3, print_land_da
         scale: 比例尺像素
         debug: debug
         debug_len: debug长度
-        print_land_data: 打印地块数据，为生成冷热分区的图片做准备
+        land_data_only: 只返回地块数据，为生成冷热分区的图片做准备
     """
     src = cv.imread(img_path)
     image_width_height = {'width': int(src.shape[1]), 'height': int(src.shape[0])}
@@ -177,15 +175,9 @@ def process(img_path, bgr_colors, scale, debug=False, debug_len=3, print_land_da
     e1 = cv.getTickCount()
 
     # 通过颜色来检测地块内色块
-    if debug:
-        land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale,
-                                                          debug=debug, debug_len=debug_len,
-                                                          print_land_data=print_land_data)
-    elif print_land_data:
-        land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale,
-                                                          print_land_data=True)
-    else:
-        land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale)
+    land_data_list = find_color_regions_for_all_lands(src, land_cnts, bgr_colors, scale,
+                                                      debug=debug, debug_len=debug_len,
+                                                      land_data_only=land_data_only)
 
     e2 = cv.getTickCount()
     time = (e2 - e1) / cv.getTickFrequency()
@@ -201,10 +193,10 @@ def main():
     img_path = image_folder + '/land_region.png'
     scale = 147
 
-    # land_dict = process(img_path, color_data.bgr_colors, scale, debug=True, debug_len=None)
-    # land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale, print_land_data=True)
+    # land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale, debug=True, debug_len=None)
+    land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale, land_data_only=True)
+    # land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale)
     # print(image_width_height)
-    land_dict = process(img_path, color_data.bgr_colors, scale)
 
     json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
     print(json_data)
