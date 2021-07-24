@@ -16,6 +16,7 @@ def generate(input_data: InputData, debug=False):
     # 新建一张白底图片
     img = np.ones((mt_img.height, mt_img.width, 3), dtype=np.uint8) * 255
 
+    random_color_memo = set()
     for land_data in input_data.land_data:
         land_pts = []
         for pt in land_data.points:
@@ -23,7 +24,7 @@ def generate(input_data: InputData, debug=False):
 
         cnt = np.array(land_pts, dtype=np.int32).reshape((-1, 1, 2))
         # cv.drawContours(img, [cnt], -1, (255, 0, 0), 2)
-        random_color = color_util.random_color()
+        random_color = color_util.random_color(random_color_memo)
         cv.fillConvexPoly(img, cnt, random_color)
 
     folder_name = uuid.uuid4()
