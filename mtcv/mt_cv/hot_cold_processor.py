@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 import sys
-from mt_cv import image_util
+from mt_cv import image_util, color_util
 
 
 def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False):
@@ -121,11 +121,14 @@ def is_chunked_land_in_rr(cc, rr):
     """检查切割后的地块是否在供能方块内
     """
     rrX1, rrY1, rrX2, rrY2 = rr[0], rr[1], rr[2], rr[3]
-    for ccPtr in cc:
-        ccX, ccY = ccPtr[0][0], ccPtr[0][1]
-        if ccX < rrX1 or ccX > rrX2 or ccY < rrY1 or ccY > rrY2:
-            return False
-    return True
+    # 理论上，分割后的地块cc的每个点肯定在功能半径rr里，那取一个点就可以用来证明是否香蕉
+    # for ccPtr in cc:
+    ccPtr = cc[0]
+    ccX, ccY = ccPtr[0][0], ccPtr[0][1]
+    if ccX < rrX1 or ccX > rrX2 or ccY < rrY1 or ccY > rrY2:
+        return False
+    else:
+        return True
 
 
 def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
@@ -144,16 +147,23 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
         land_rr_dict: Origianl contours to RR dictionary
     """
     # 计算单个功能方块面积，用于计算切割后的地块在供能方块里的占比，从而知道属于哪个供能方块
-    # rr_ratio = cc_area / rr_area
     rr_area = rr_radius * rr_radius
 
     # 存放切割后的地块和供能方块的关系
     chunked_land_rr_dict = {}
 
-    for row, rr_row in enumerate(RR):
-        for col, rr in enumerate(rr_row):
+    # 如果分割的地块已经确定在哪个供能半径里，那么就不需要再次计算
+    chunked_land_rr_memo = set()
 
-            for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
+    for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
+        for row, rr_row in enumerate(RR):
+            for col, rr in enumerate(rr_row):
+                rr_index = row * (len(RR)) + col
+
+                chunked_land_rr_memo_item = 'cc' + str(chunked_land_index) + 'rr' + str(rr_index)
+                if chunked_land_rr_memo_item in chunked_land_rr_memo:
+                    continue
+
                 cc_area = cv.contourArea(chunked_land)
                 # 去除一些很小的噪音点
                 if cc_area < 100:
@@ -167,19 +177,18 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
 
                 if retval:
                     rr_ratio = round(cc_area / rr_area * 100, 2)
-                    rr_index = row * (len(RR)) + col
                     # chunked_land and rr are one to one relationship
                     chunked_land_rr_dict[chunked_land_index] = [rr_index, rr_ratio]
+                    chunked_land_rr_memo.add(chunked_land_rr_memo_item)
 
     # 存放地块和供能方块的关系
     land_rr_dict = {}
 
     # 根据切割的地块与供能方块的关系，以及未切割前的原始地块，来计算地块和供能方块关系
-    for land_index, land in enumerate(land_cnts):
-        for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
+    for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
+        for land_index, land in enumerate(land_cnts):
 
-            # TODO 可以考虑检查切割的地块颜色是否和原始地块匹配，来提升性能
-            # 检查切割后的地块是否存在过滤后的地块和供能关系里
+            # 检查切割后的地块是否存在上面已经建立的地块和供能关系里
             if chunked_land_index not in chunked_land_rr_dict:
                 continue
 
@@ -288,8 +297,7 @@ def process_with_rr(src, rr_radius, image_folder, debug=False):
     if debug:
         # 将相同冷暖区的地块填充为同一种随机色
         for rr_index in rr_land_dict:
-            b, g, r = np.random.randint(100, 200), np.random.randint(100, 200), np.random.randint(100, 200)
-            color = (b, g, r)
+            color = color_util.random_color()
             for land_index in rr_land_dict[rr_index]:
                 cv.fillConvexPoly(copy_for_hot_cold, land_cnts[land_index], color)
 
