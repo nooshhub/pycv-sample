@@ -7,7 +7,7 @@ import numpy as np
 import cv2 as cv
 
 from mt_cv import test_util, image_util
-from mt_cv.land_data import test_input_data
+from mt_cv.test_land_data import test_input_data
 from mt_cv.mt_cv_api_model import InputData, LandData, MtImage, MtCoordinate, MtScale
 
 
