@@ -4,6 +4,8 @@ import uuid
 import pathlib
 import shutil
 
+from mt_cv import image_util
+
 
 def download_img(image_url):
     """根据图片的url下载图片
@@ -17,7 +19,7 @@ def download_img(image_url):
     folder_name = uuid.uuid4()
     image_extension = pathlib.Path(image_url).suffix
     image_file_name = 'original' + image_extension
-    image_folder = '../images/tmp/' + str(folder_name)
+    image_folder = image_util.img_abs_path('/images/tmp/' + str(folder_name))
     image_path = image_folder + '/' + image_file_name
 
     # 创建文件夹

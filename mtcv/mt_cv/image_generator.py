@@ -6,7 +6,7 @@ from typing import List
 import numpy as np
 import cv2 as cv
 
-from mt_cv import test_util
+from mt_cv import test_util, image_util
 from mt_cv.land_data import test_input_data
 from mt_cv.mt_cv_api_model import InputData, LandData, MtImage, MtCoordinate, MtScale
 
@@ -27,7 +27,7 @@ def generate(input_data: InputData, debug=False):
 
     folder_name = uuid.uuid4()
     image_file_name = 'hot_cold.png'
-    image_folder = '../images/tmp/' + str(folder_name)
+    image_folder = image_util.img_abs_path('/images/tmp/' + str(folder_name))
     image_path = image_folder + '/' + image_file_name
 
     # 创建文件夹

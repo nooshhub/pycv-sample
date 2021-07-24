@@ -54,7 +54,7 @@ def process(img_path):
 
 
 def main():
-    img_path = '/images/id1/id1.png'
+    img_path = '/images/demo/demo3.png'
 
     land_dict = process(image_util.img_abs_path(img_path))
 

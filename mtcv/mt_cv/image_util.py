@@ -86,7 +86,7 @@ def bgr_with_threshold(bgr, threshold):
 
 def img_abs_path(img_path):
     """图片绝对路径"""
-    return config.MTCV_HOME + img_path
+    return config.settings.MTCV_HOME + img_path
 
 
 def generate_square_img(src):

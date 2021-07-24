@@ -1,16 +1,16 @@
-import os
-import platform
+from pydantic import BaseSettings
 
-# TODO 自动找出项目根目录
-# 公司
-# MTCV_HOME = 'D:/anaconda3/pycv-sample/mtcv'
 
-# 家
-MTCV_HOME = 'D:/opencv/pynotebook/mtcv'
+class Settings(BaseSettings):
+    """
+    公司 MTCV_HOME = 'D:/anaconda3/pycv-sample/mtcv'
+    家 MTCV_HOME = 'D:/opencv/pynotebook/mtcv'
+    server MTCV_HOME = ''
+    """
+    MTCV_HOME: str = ''
 
-# server use root /
-# MTCV_HOME = ''
+
+settings = Settings()
 
 if __name__ == '__main__':
-    print(platform.system())
-    print(os.environ['MTCV_HOME'])
+    print(settings)

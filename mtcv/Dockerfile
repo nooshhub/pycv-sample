@@ -7,5 +7,5 @@ RUN pip install fastapi uvicorn aiofiles opencv-python==4.5.1.48 opencv-contrib-
 EXPOSE 8000
 
 COPY ./ /
-
+ENV MTCV_HOME=""
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
