@@ -91,9 +91,6 @@ def find_external_contours(src):
 
     edges = cv.Canny(opening, 100, 200)
     contours, hierarchy = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    #     cv.imshow('gray', gray)
-    #     cv.imshow('thresh1', thresh1)
-    #     cv.imshow('opening', opening)
     return contours
 
 
@@ -216,22 +213,23 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius):
     return rr_land_dict, land_rr_dict
 
 
-def show_cnt_id(cnts, img, img_name):
+def show_cnt_id(image_folder, cnts, img, img_name):
     """显示地块轮廓id"""
     copy = img.copy()
     for ccIndex, cc in enumerate(cnts):
         x, y, w, h = cv.boundingRect(cc)
         cv.putText(copy, str(ccIndex), (x + 5, y + 10), cv.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 1,
                    cv.LINE_AA)
-    cv.imshow(img_name, copy)
+    image_util.generate_img(image_folder, img_name, copy)
 
 
-def process_with_rr(squared_img, rr_radius, debug=False):
+def process_with_rr(src, rr_radius, image_folder, debug=False):
     """处理图像
 
     Args:
-        squared_img: 正方形图像
+        src: 正方形图像
         rr_radius: 供能半径
+        image_folder: 图片文件夹
         debug: 调式，默认False关闭,
             Ture 生成一张带有功能半径的示例图像, 生成一张用于计算冷热分区的图像
 
@@ -240,22 +238,22 @@ def process_with_rr(squared_img, rr_radius, debug=False):
     """
 
     # 找出所有地块
-    land_cnts = find_external_contours(squared_img)
+    land_cnts = find_external_contours(src)
 
     # 找出功能半径起始位置
     start_coordinate = find_start_coordinate(land_cnts)
 
     if debug:
         # 生成一张带有功能半径的验证图像
-        rr_detail = squared_img.copy()
-        show_cnt_id(land_cnts, rr_detail, 'rr_detail_with_land_id')
+        rr_detail = src.copy()
+        show_cnt_id(image_folder, land_cnts, rr_detail, 'rr_detail_with_land_id.png')
 
         # draw RR for testing
         draw_rr(rr_detail, rr_radius, start_coordinate, show_detail=True)
-        cv.imshow('rr_detail', rr_detail)
+        image_util.generate_img(image_folder, 'rr_detail.png', rr_detail)
 
     # 准备收集冷热分区
-    copy_for_hot_cold = squared_img.copy()
+    copy_for_hot_cold = src.copy()
 
     # 画出计算用的功能半径
     RR = draw_rr(copy_for_hot_cold, rr_radius, start_coordinate)
@@ -265,7 +263,7 @@ def process_with_rr(squared_img, rr_radius, debug=False):
 
     if debug:
         # add chunked contour ID for testing
-        show_cnt_id(chunked_land_cnts, copy_for_hot_cold, 'copy_for_hot_cold_with_land_id')
+        show_cnt_id(image_folder, chunked_land_cnts, copy_for_hot_cold, 'hot_cold_with_land_id.png')
 
     # 计算时间
     e1 = cv.getTickCount()
@@ -290,7 +288,7 @@ def process_with_rr(squared_img, rr_radius, debug=False):
     if debug:
         # 将相同冷暖区的地块填充为同一种随机色
         for rr_index in rr_land_dict:
-            b, g, r = np.random.randint(0, 255), np.random.randint(0, 255), np.random.randint(0, 255)
+            b, g, r = np.random.randint(100, 200), np.random.randint(100, 200), np.random.randint(100, 200)
             color = (b, g, r)
             for land_index in rr_land_dict[rr_index]:
                 cv.fillConvexPoly(copy_for_hot_cold, land_cnts[land_index], color)
@@ -300,19 +298,20 @@ def process_with_rr(squared_img, rr_radius, debug=False):
             if land_index not in land_rr_dict:
                 cv.fillConvexPoly(copy_for_hot_cold, oc, (0, 0, 0))
 
-        cv.imshow('copy_for_hot_cold', copy_for_hot_cold)
+        image_util.generate_img(image_folder, 'hot_cold_result.png', copy_for_hot_cold)
 
-    # TODO 返回按供能方块id分组的地块坐标，approx以后的，不然数据太大
     return rr_land_data
 
 
-def process(img_path, scale, km, debug=False):
+def process(image_folder, img_path, scale, km, debug=False):
     """冷热分区
 
     Args:
+        image_folder: 图片文件夹
         img_path: 图片路径
         scale: 比例尺的像素1km对应的像素
         km: 功能半径是几千米
+        debug: 调试
 
     Returns:
         冷热分区信息
@@ -322,18 +321,18 @@ def process(img_path, scale, km, debug=False):
 
     # 处理图像
     rr_radius = scale * km
-    rr_land_data = process_with_rr(src, rr_radius, debug=debug)
+    rr_land_data = process_with_rr(src, rr_radius, image_folder, debug=debug)
     return {'rr_land_data': rr_land_data}
 
 
 def main():
-    image_folder = '../images/tmp/e54fe0fa-f2be-4f42-ae13-83b5a583fa70'
+    image_folder = image_util.img_abs_path('/images/tmp/2c01cfe3-8291-4e22-b7f1-9fc311dbc190')
     img_path = image_folder + '/hot_cold.png'
 
-    scale = 147
+    scale = 540
     km = 1
 
-    process(img_path, scale, km, debug=True)
+    process(image_folder, img_path, scale, km, debug=True)
 
     cv.waitKey(0)
     cv.destroyAllWindows()

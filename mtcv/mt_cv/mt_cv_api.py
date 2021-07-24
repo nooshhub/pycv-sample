@@ -92,7 +92,7 @@ def hot_cold(input_data: InputData, clean_image: bool = True):
 
     # 生成冷热地块数据
     scale = input_data.scale
-    hot_cold_data = hcp.process(image_path, scale.pixel, scale.km)
+    hot_cold_data = hcp.process(image_folder, image_path, scale.pixel, scale.km, debug=not clean_image)
 
     # 清理图片
     if clean_image:
