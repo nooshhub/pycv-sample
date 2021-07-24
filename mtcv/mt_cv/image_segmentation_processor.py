@@ -1,5 +1,5 @@
 import cv2 as cv
-from mt_cv import image_util
+from mt_cv import image_util, test_util
 import pathlib
 from fastapi import HTTPException
 
@@ -18,6 +18,8 @@ def find_roi_rect(src):
 
     contours, hierarchy = cv.findContours(threshold, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     sorted_cnts = sorted(contours, key=cv.contourArea, reverse=True)
+
+    # test_util.show_contours(copy, sorted_cnts, rect=False)
 
     rois = []
     for cnt in sorted_cnts:
@@ -69,7 +71,7 @@ def process(image_folder, img_path):
 
 
 def main():
-    image_folder = '../images/tmp/702b699e-f9a3-465b-a2b0-072662cf4f35'
+    image_folder = '../images/tmp/0a0937ba-ca3e-4d8c-9c3b-dbecfb5b1d68'
     img_path = image_folder + '/original.png'
 
     process(image_folder, img_path)
