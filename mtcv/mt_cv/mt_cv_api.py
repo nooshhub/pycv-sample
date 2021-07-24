@@ -16,16 +16,18 @@ router = APIRouter(
 
 
 @router.post("/land_color", summary="输入图片URL，返回地块与颜色信息")
-def land_color(img_url: str = 'http://localhost:8002/images/demo/demo3_1.png', land_data_only: bool = False):
+def land_color(img_url: str = 'http://localhost:8002/images/demo/demo3_1.png', land_data_only: bool = False
+               , clean_image: bool = True):
     """地块与色块信息
 
     Args:
         img_url: 图片URL
         land_data_only: True只返回地块信息，用于计算冷热分区
+        clean_image: True删除所有生成的图片，False保留生成的图片，用于分析图片处理的问题
+
     Returns:
         地块与色块信息
 
-    Raises:
     """
     # 根据img_url下载图片
     image_folder, image_path = img_dl.download_img(img_url)
@@ -49,7 +51,8 @@ def land_color(img_url: str = 'http://localhost:8002/images/demo/demo3_1.png', l
     # TODO 添加地块的一些校验
 
     # 清理图片
-    # img_dl.clean_img(image_folder)
+    if clean_image:
+        img_dl.clean_img(image_folder)
 
     if land_data_only:
         response_data = {
@@ -72,15 +75,16 @@ def land_color(img_url: str = 'http://localhost:8002/images/demo/demo3_1.png', l
 
 
 @router.post("/hot_cold", summary="按照图像，地块，比例尺数据，返回冷热分区信息，地块按供能方块分组")
-def hot_cold(input_data: InputData):
+def hot_cold(input_data: InputData, clean_image: bool = True):
     """按照图像，地块，比例尺数据生成图片，然后进行分组
 
     Args:
         input_data: 图像，地块，比例尺数据
+        clean_image: True删除所有生成的图片，False保留生成的图片，用于分析图片处理的问题
+
     Returns:
         冷热地块数据
 
-    Raises:
     """
 
     # 根据输入数据，生成图片
@@ -91,6 +95,7 @@ def hot_cold(input_data: InputData):
     hot_cold_data = hcp.process(image_path, scale.pixel, scale.km)
 
     # 清理图片
-    # img_dl.clean_img(image_folder)
+    if clean_image:
+        img_dl.clean_img(image_folder)
 
     return {'hot_cold_data': hot_cold_data}
