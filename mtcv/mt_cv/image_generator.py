@@ -17,16 +17,7 @@ def generate(input_data: InputData, debug=False):
     img = np.ones((mt_img.height, mt_img.width, 3), dtype=np.uint8) * 255
 
     # 转换输入的input_data为我们后期需要使用的地块轮廓和id信息，并且填充唯一颜色到各个地块里
-    random_color_memo = set()
-    for land_data in input_data.land_data:
-        land_pts = []
-        for pt in land_data.points:
-            land_pts.append([pt.xAxis, pt.yAxis])
-
-        cnt = np.array(land_pts, dtype=np.int32).reshape((-1, 1, 2))
-        # cv.drawContours(img, [cnt], -1, (255, 0, 0), 2)
-        random_color = color_util.random_color(random_color_memo)
-        cv.fillConvexPoly(img, cnt, random_color)
+    color_id_dict = convert_input_data(img, input_data)
 
     # 创建图片，uuid为文件夹名，hot_cold.png为文件名
     folder_name = uuid.uuid4()
@@ -39,7 +30,27 @@ def generate(input_data: InputData, debug=False):
         generated_img = cv.imread(image_path)
         test_util.show_img('generated_img', generated_img)
 
-    return image_folder, image_path
+    return image_folder, image_path, color_id_dict
+
+
+def convert_input_data(img, input_data):
+    """转换输入的input_data, 成为地块轮廓与id字典，并且填充唯一颜色到各个地块里"""
+    color_id_dict = {}
+
+    random_color_memo = set()
+    for land_data in input_data.land_data:
+        land_pts = []
+        for pt in land_data.points:
+            land_pts.append([pt.xAxis, pt.yAxis])
+
+        cnt = np.array(land_pts, dtype=np.int32).reshape((-1, 1, 2))
+        # cv.drawContours(img, [cnt], -1, (255, 0, 0), 2)
+        random_color = color_util.random_color(random_color_memo)
+        cv.fillConvexPoly(img, cnt, random_color)
+
+        color_id = color_util.color_id(random_color)
+        color_id_dict[color_id] = land_data.id
+    return color_id_dict
 
 
 def clean_img(image_folder):

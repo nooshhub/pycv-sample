@@ -31,6 +31,13 @@ def random_color(memo=None):
     return b, g, r
 
 
+def color_id(bgr_color):
+    """输入bgr color，可以是一个tuple，array，或者numpy array"""
+    bgr_tuple = str(bgr_color[0]), str(bgr_color[1]), str(bgr_color[2])
+    return "_".join(bgr_tuple)
+
+
 if __name__ == '__main__':
+    # bgr = np.array([0, 0, 255])
     bgr = [0, 0, 255]
-    convert_bgr_to_rgb_str(bgr)
+    print(color_id(bgr))

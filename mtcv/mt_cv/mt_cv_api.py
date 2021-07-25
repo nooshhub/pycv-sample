@@ -88,11 +88,12 @@ def hot_cold(input_data: InputData, clean_image: bool = True):
     """
 
     # 根据输入数据，生成图片
-    image_folder, image_path = img_gen.generate(input_data)
+    image_folder, image_path, color_id_dict = img_gen.generate(input_data)
 
     # 生成冷热地块数据
     scale = input_data.scale
-    hot_cold_data = hcp.process(image_folder, image_path, scale.pixel, scale.km, debug=not clean_image)
+    hot_cold_data = hcp.process(image_folder, image_path, color_id_dict, scale.pixel, scale.km,
+                                debug=not clean_image)
 
     # 清理图片
     if clean_image:
