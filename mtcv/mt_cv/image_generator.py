@@ -16,6 +16,7 @@ def generate(input_data: InputData, debug=False):
     # 新建一张白底图片
     img = np.ones((mt_img.height, mt_img.width, 3), dtype=np.uint8) * 255
 
+    # 转换输入的input_data为我们后期需要使用的地块轮廓和id信息，并且填充唯一颜色到各个地块里
     random_color_memo = set()
     for land_data in input_data.land_data:
         land_pts = []
@@ -27,6 +28,7 @@ def generate(input_data: InputData, debug=False):
         random_color = color_util.random_color(random_color_memo)
         cv.fillConvexPoly(img, cnt, random_color)
 
+    # 创建图片，uuid为文件夹名，hot_cold.png为文件名
     folder_name = uuid.uuid4()
     image_file_name = 'hot_cold.png'
     image_folder = image_util.img_abs_path('/images/tmp/' + str(folder_name))
