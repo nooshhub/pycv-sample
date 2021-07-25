@@ -27,8 +27,12 @@ def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False)
 
     rr_line_color = (255, 0, 0) if show_detail else (255, 255, 255)
 
-    # 创建RR功能半径矩阵，row和col相同的正放心，4表示每个单元格存放4个数值分别是x1, y1, x2, y2，起点1和起点的对角点2
+    # 创建RR供能半径矩阵，row和col相同的正放心，4表示每个单元格存放4个数值分别是x1, y1, x2, y2，起点1和起点的对角点2
     RR = np.zeros((number_of_rr_per_row, number_of_rr_per_row, 4), np.uint32)
+
+    # 备份RR供能半径的信息，方便返回
+    rr_dict = {}
+    rr_mat_dict = {"mat_len": number_of_rr_per_row, "rr_radius": rr_radius, "rr_thickness": rr_thickness}
 
     for row in range(number_of_rr_per_row):
         for col in range(number_of_rr_per_row):
@@ -43,13 +47,18 @@ def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False)
             cv.rectangle(copy_of_squared_img, (x1, y1), (x2, y2), rr_line_color, rr_thickness, cv.LINE_AA)
             RR[row][col] = [x1, y1, x2, y2]
 
+            # 准备rr_mat_dict数据
+            # 准备rr_dict数据
+            rr_index = get_rr_index(number_of_rr_per_row, row, col)
+            rr_data_dict = {"index": rr_index, "row": row, "col": col, "top_left_point": (x1, y1)}
+            rr_dict[rr_index] = rr_data_dict
+
             if show_detail:
                 # add RR label
-                rrIndex = row * number_of_rr_per_row + col
-                cv.putText(copy_of_squared_img, 'RR' + str(rrIndex), (x1, y1 + 30), cv.FONT_HERSHEY_SIMPLEX, 1,
+                cv.putText(copy_of_squared_img, 'RR' + str(rr_index), (x1, y1 + 30), cv.FONT_HERSHEY_SIMPLEX, 1,
                            (255, 0, 0), 2, cv.LINE_AA)
 
-    return RR
+    return RR, rr_dict, rr_mat_dict
 
 
 def find_start_coordinate(cnts):
@@ -178,11 +187,12 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, 
 
     # 如果分割的地块已经确定在哪个供能半径里，那么就不需要再次计算
     chunked_land_rr_memo = set()
+    RR_len = (len(RR))
 
     for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
         for row, rr_row in enumerate(RR):
             for col, rr in enumerate(rr_row):
-                rr_index = row * (len(RR)) + col
+                rr_index = get_rr_index(RR_len, row, col)
 
                 chunked_land_rr_memo_item = 'cc' + str(chunked_land_index) + 'rr' + str(rr_index)
                 if chunked_land_rr_memo_item in chunked_land_rr_memo:
@@ -252,6 +262,18 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, 
     return rr_land_dict, land_rr_dict, hot_cold_img_for_pick_color
 
 
+def get_rr_index(RR_len, row, col):
+    """获取rr_index
+
+    Args:
+        RR_len: rr正方形矩阵的铲毒
+        row: 行，从0开始
+        col: 列，从0开始
+    """
+    rr_index = row * RR_len + col
+    return rr_index
+
+
 def show_cnt_id(image_folder, cnts, img, img_name):
     """显示地块轮廓id"""
     copy = img.copy()
@@ -296,7 +318,7 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
     copy_for_hot_cold = src.copy()
 
     # 画出计算用的功能半径
-    RR = draw_rr(copy_for_hot_cold, rr_radius, start_coordinate)
+    RR, rr_dict, rr_mat_dict = draw_rr(copy_for_hot_cold, rr_radius, start_coordinate)
 
     # 找出所有被切割和未被切割的地块
     chunked_land_cnts = find_external_contours(copy_for_hot_cold)
@@ -322,7 +344,7 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
 
     rr_land_data = []
     for rr_index in rr_land_dict:
-        rr_data = {'rr_index': rr_index, 'land_data': []}
+        rr_data = {'rr_data': rr_dict[rr_index], 'land_data': []}
 
         for land_index in rr_land_dict[rr_index]:
             # 找到地块轮廓
@@ -366,7 +388,7 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
         image_util.generate_img(image_folder, 'hot_cold_img_for_pick_color_with_point.png',
                                 hot_cold_img_for_pick_color_with_point)
 
-    return rr_land_data
+    return rr_land_data, rr_mat_dict
 
 
 def process(image_folder, img_path, color_id_dict, scale, km, debug=False):
@@ -385,11 +407,12 @@ def process(image_folder, img_path, color_id_dict, scale, km, debug=False):
 
     """
     src = cv.imread(img_path)
+    image_width_height = {'width': int(src.shape[1]), 'height': int(src.shape[0])}
 
     # 处理图像
     rr_radius = scale * km
-    rr_land_data = process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=debug)
-    return {'rr_land_data': rr_land_data}
+    rr_land_data, rr_mat_dict = process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=debug)
+    return {'rr_mat_data': rr_mat_dict, 'rr_land_data': rr_land_data}, image_width_height
 
 
 def main():
