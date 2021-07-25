@@ -1,3 +1,5 @@
+import uuid
+
 import numpy as np
 import cv2 as cv
 import json
@@ -96,7 +98,9 @@ def find_color_regions_for_all_lands(img_white_bg, land_cnts, bgr_colors, scale,
     if land_data_only:
         land_data_list = []
         for index, land_cnt in enumerate(filtered_land_cnts):
-            land_data = {'id': index, 'points': image_util.convert_contour_to_pts(land_cnt)}
+            # land_id = index
+            land_id = uuid.uuid4()
+            land_data = {'id': str(land_id), 'points': image_util.convert_contour_to_pts(land_cnt)}
             land_data_list.append(land_data)
 
     else:
