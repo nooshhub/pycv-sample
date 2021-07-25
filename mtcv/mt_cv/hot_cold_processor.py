@@ -27,6 +27,7 @@ def draw_rr(copy_of_squared_img, rr_radius, start_coordinate, show_detail=False)
 
     rr_line_color = (255, 0, 0) if show_detail else (255, 255, 255)
 
+    # 创建RR功能半径矩阵，row和col相同的正放心，4表示每个单元格存放4个数值分别是x1, y1, x2, y2，起点1和起点的对角点2
     RR = np.zeros((number_of_rr_per_row, number_of_rr_per_row, 4), np.uint32)
 
     for row in range(number_of_rr_per_row):
