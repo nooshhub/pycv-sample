@@ -211,17 +211,20 @@ def process(img_path, bgr_colors, scale, debug=False, debug_len=3, land_data_onl
 
 
 def main():
-    image_folder = '../images/tmp/a3edfc1e-225f-456f-b00d-879b24ccfb24'
+    image_folder = '../images/tmp/f54a6722-519a-473b-bc2b-44cef32a4419'
     img_path = image_folder + '/land_region.png'
     scale = 147
 
-    land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale, debug=True, debug_len=None)
+    # land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale, debug=True, debug_len=None)
     # land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale, land_data_only=True)
-    # land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale)
+    land_dict, image_width_height = process(img_path, color_data.bgr_colors, scale)
     # print(image_width_height)
 
     json_data = json.dumps(land_dict, sort_keys=True, indent=4, separators=(',', ': '))
-    print(json_data)
+    # print(json_data)
+
+    with open(image_folder + '/data_2.json', 'w') as f:
+        json.dump(json_data, f)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
