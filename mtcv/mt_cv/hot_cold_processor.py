@@ -364,7 +364,7 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
 
             # 组装地块数据
             land_data = {
-                'id': color_id_dict[color_id],
+                'id': color_id_dict.get(color_id, 'null'),
                 'pts': pts
             }
             rr_data['land_data'].append(land_data)

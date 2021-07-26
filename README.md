@@ -350,7 +350,12 @@ FROM python:3.9
 
 RUN apt-get update
 # RUN apt install libgl1-mesa-glx -y
-RUN apt-get install ffmpeg libsm6 libxext6  -y
+RUN apt-get install ffmpeg libsm6 libxext6 -y
+
+RUN pip install -U pip
+RUN pip config set global.index-url http://mirrors.aliyun.com/pypi/simple
+RUN pip config set install.trusted-host mirrors.aliyun.com
+
 RUN pip install fastapi uvicorn aiofiles opencv-python==4.5.1.48 opencv-contrib-python==4.5.1.48
 
 EXPOSE 8000
@@ -363,18 +368,19 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 
 ```shell
-# 删除之前无用的镜像
-docker images
-docker rmi -f 50fa88577b3c
-docker rmi -f mtcv
-# 删除的镜像无用的垃圾image
-docker rmi $(docker images -f "dangling=true" -q)
-docker images prune -f
-
 # 删除之前无用的容器
 docker ps -a
 docker rm -f de74e81dc74f
 docker rm -f mtcv
+
+# 删除之前无用的镜像
+docker images
+docker rmi -f 50fa88577b3c
+# docker rmi -f mtcv
+# 删除的镜像无用的垃圾image
+docker rmi $(docker images -f "dangling=true" -q)
+docker images prune -f
+
 
 # build and run
 docker build -t mtcv .
