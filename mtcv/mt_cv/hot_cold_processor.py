@@ -109,23 +109,32 @@ def is_contour_intersect(img_for_pick_color, chunked_land, land):
     """地块轮廓交集检查
     """
 
-    # 随机抽取5个点，如果他们的颜色有1个以上相同，说明是chunked_land在land里
-    rnd_max = min(len(chunked_land), len(land))
-
-    count = 0
-    for i in range(5):
-        rnd_index = random.randint(0, rnd_max - 1)
-        cl_xy = chunked_land[rnd_index][0]
-        l_xy = land[rnd_index][0]
-        cl_color = img_for_pick_color[cl_xy[1]][cl_xy[0]]
-        l_color = img_for_pick_color[l_xy[1]][l_xy[0]]
-        if np.array_equal(cl_color, l_color):
-            count += 1
-
-    if count >= 1:
+    cl_xy = chunked_land[0][0]
+    l_xy = land[0][0]
+    cl_color = img_for_pick_color[cl_xy[1]][cl_xy[0]]
+    l_color = img_for_pick_color[l_xy[1]][l_xy[0]]
+    if np.array_equal(cl_color, l_color):
         return True
     else:
         return False
+
+    # 随机抽取5个点，如果他们的颜色有1个以上相同，说明是chunked_land在land里
+    # rnd_max = min(len(chunked_land), len(land))
+    #
+    # count = 0
+    # for i in range(5):
+    #     rnd_index = random.randint(0, rnd_max - 1)
+    #     cl_xy = chunked_land[rnd_index][0]
+    #     l_xy = land[rnd_index][0]
+    #     cl_color = img_for_pick_color[cl_xy[1]][cl_xy[0]]
+    #     l_color = img_for_pick_color[l_xy[1]][l_xy[0]]
+    #     if np.array_equal(cl_color, l_color):
+    #         count += 1
+    #
+    # if count >= 1:
+    #     return True
+    # else:
+    #     return False
 
     # 色彩比较法比轮廓交集法要快很多
     # # Two separate contours trying to check intersection on
@@ -152,7 +161,7 @@ def is_chunked_land_in_rr(cc, rr):
     """检查切割后的地块是否在供能方块内
     """
     rrX1, rrY1, rrX2, rrY2 = rr[0], rr[1], rr[2], rr[3]
-    # 理论上，分割后的地块cc的每个点肯定在功能半径rr里，那取一个点就可以用来证明是否香蕉
+    # 理论上，分割后的地块cc的每个点肯定在功能半径rr里，那取一个点就可以用来证明是否相交
     # for ccPtr in cc:
     ccPtr = cc[0]
     ccX, ccY = ccPtr[0][0], ccPtr[0][1]
@@ -162,7 +171,8 @@ def is_chunked_land_in_rr(cc, rr):
         return True
 
 
-def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, image_folder, debug=False):
+def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, image_folder,
+                     src_with_contour, debug=False):
     """获取供能半径和地块的关系
     地块按照供能半径分组，供能半径从左往右，从0开始展开
 
@@ -173,6 +183,7 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, 
         chunked_land_cnts: 被功能半径切割后的地块轮廓
         rr_radius: 供能半径的长度
         image_folder: image_folder
+        src_with_contour: 地块轮廓图
         debug: debug
 
     Returns:
@@ -204,10 +215,10 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, 
                     continue
 
                 # Contour Approximation to reduce points and save calculation time
-                epsilon_cc = 0.1 * cv.arcLength(chunked_land, True)
-                approx_cc = cv.approxPolyDP(chunked_land, epsilon_cc, True)
-
-                retval = is_chunked_land_in_rr(approx_cc, rr)
+                # epsilon_cc = 0.1 * cv.arcLength(chunked_land, True)
+                # approx_cc = cv.approxPolyDP(chunked_land, epsilon_cc, True)
+                # retval = is_chunked_land_in_rr(approx_cc, rr)
+                retval = is_chunked_land_in_rr(chunked_land, rr)
 
                 if retval:
                     rr_ratio = round(cc_area / rr_area * 100, 2)
@@ -218,12 +229,6 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, 
     # 存放地块和供能方块的关系
     land_rr_dict = {}
 
-    # 腐蚀下图片，使得彩色区域变大，方便使用轮廓取颜色, 因为轮廓可能不在地块里，导致颜色不匹配
-    kernel = np.ones((7, 7), np.uint8)
-    hot_cold_img_for_pick_color = cv.erode(hot_cold_img, kernel)
-    if debug:
-        image_util.generate_img(image_folder, 'hot_cold_img_for_pick_color.png', hot_cold_img_for_pick_color)
-
     # 根据切割的地块与供能方块的关系，以及未切割前的原始地块，来计算地块和供能方块关系
     for chunked_land_index, chunked_land in enumerate(chunked_land_cnts):
         for land_index, land in enumerate(land_cnts):
@@ -232,7 +237,7 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, 
             if chunked_land_index not in chunked_land_rr_dict:
                 continue
 
-            retval = is_contour_intersect(hot_cold_img_for_pick_color, chunked_land, land)
+            retval = is_contour_intersect(src_with_contour, chunked_land, land)
 
             if retval:
                 rr = chunked_land_rr_dict[chunked_land_index]
@@ -259,7 +264,7 @@ def get_rr_land_dict(hot_cold_img, RR, land_cnts, chunked_land_cnts, rr_radius, 
     # print('chunked_land_rr_dict', chunked_land_rr_dict)
     # print('land_rr_dict', land_rr_dict)
     # print('rr_land_dict', rr_land_dict)
-    return rr_land_dict, land_rr_dict, hot_cold_img_for_pick_color
+    return rr_land_dict, land_rr_dict
 
 
 def get_rr_index(RR_len, row, col):
@@ -284,11 +289,13 @@ def show_cnt_id(image_folder, cnts, img, img_name):
     image_util.generate_img(image_folder, img_name, copy)
 
 
-def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
+def process_with_rr(src, src_with_contour, input_land_cnts, rr_radius, image_folder, color_id_dict, debug=False):
     """处理图像
 
     Args:
-        src: 正方形图像
+        src: 地块图
+        src_with_contour: 地块轮廓图
+        input_land_cnts: 地块轮廓
         rr_radius: 供能半径
         image_folder: 图片文件夹
         color_id_dict: 地块颜色和id字典
@@ -299,8 +306,8 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
         ZeroDivisionError: division by zero
     """
 
-    # 找出所有地块
-    land_cnts = find_external_contours(src)
+    # 地块轮廓直接采用输入数据里的点
+    land_cnts = input_land_cnts
 
     # 找出功能半径起始位置
     start_coordinate = find_start_coordinate(land_cnts)
@@ -331,8 +338,9 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
     e1 = cv.getTickCount()
 
     # 获取功能半径和地块的关联关系
-    rr_land_dict, land_rr_dict, hot_cold_img_for_pick_color = \
-        get_rr_land_dict(copy_for_hot_cold, RR, land_cnts, chunked_land_cnts, rr_radius, image_folder, debug=debug)
+    rr_land_dict, land_rr_dict = \
+        get_rr_land_dict(copy_for_hot_cold, RR, land_cnts, chunked_land_cnts, rr_radius,
+                         image_folder, src_with_contour, debug=debug)
 
     e2 = cv.getTickCount()
     time = (e2 - e1) / cv.getTickFrequency()
@@ -340,7 +348,7 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
 
     if debug:
         # 拷贝一份用来画出查找颜色标注点
-        hot_cold_img_for_pick_color_with_point = hot_cold_img_for_pick_color.copy()
+        hot_cold_img_for_pick_color_with_point = src_with_contour.copy()
 
     rr_land_data = []
     for rr_index in rr_land_dict:
@@ -355,12 +363,8 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
             first_point_in_cnt = pts[0]
             first_point_x = first_point_in_cnt['xAxis']
             first_point_y = first_point_in_cnt['yAxis']
-            land_color = hot_cold_img_for_pick_color[first_point_y][first_point_x]
+            land_color = src_with_contour[first_point_y][first_point_x]
             color_id = color_util.color_id(land_color)
-
-            if debug:
-                # 标注找颜色的点
-                cv.circle(hot_cold_img_for_pick_color_with_point, (first_point_x, first_point_y), 3, (0, 0, 0), 2)
 
             # 组装地块数据
             land_data = {
@@ -368,6 +372,11 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
                 'pts': pts
             }
             rr_data['land_data'].append(land_data)
+
+            if debug:
+                # 标注没有找对颜色的点
+                # if land_data['id'] == 'null':
+                cv.circle(hot_cold_img_for_pick_color_with_point, (first_point_x, first_point_y), 3, (0, 0, 0), 2)
 
         rr_land_data.append(rr_data)
 
@@ -391,13 +400,15 @@ def process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=False):
     return rr_land_data, rr_mat_dict
 
 
-def process(image_folder, img_path, color_id_dict, scale, km, debug=False):
+def process(image_folder, img_path, color_id_dict, image_with_contour_path, input_land_cnts, scale, km, debug=False):
     """冷热分区
 
     Args:
         image_folder: 图片文件夹
         img_path: 图片路径
         color_id_dict: 地块颜色和id字典
+        image_with_contour_path: 地块轮廓图
+        input_land_cnts: 地块轮廓
         scale: 比例尺的像素1km对应的像素
         km: 功能半径是几千米
         debug: 调试
@@ -409,9 +420,12 @@ def process(image_folder, img_path, color_id_dict, scale, km, debug=False):
     src = cv.imread(img_path)
     image_width_height = {'width': int(src.shape[1]), 'height': int(src.shape[0])}
 
+    src_with_contour = cv.imread(image_with_contour_path)
+
     # 处理图像
     rr_radius = scale * km
-    rr_land_data, rr_mat_dict = process_with_rr(src, rr_radius, image_folder, color_id_dict, debug=debug)
+    rr_land_data, rr_mat_dict = process_with_rr(src, src_with_contour, input_land_cnts,
+                                                rr_radius, image_folder, color_id_dict, debug=debug)
     return {'rr_mat_data': rr_mat_dict, 'rr_land_data': rr_land_data}, image_width_height
 
 
