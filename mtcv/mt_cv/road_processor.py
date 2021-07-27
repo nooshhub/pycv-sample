@@ -91,10 +91,10 @@ def process(image_folder, img_path):
     #         cv.polylines(src, [pts], True, (0, 255, 0))
     #
 
-    # kernel = np.ones((5, 5), np.uint8)
-    # morph = cv.morphologyEx(thresh, cv.MORPH_OPEN, kernel)
+    # kernel = np.ones((3, 3), np.uint8)
+    # morph = cv.morphologyEx(img_with_land_cnt, cv.MORPH_CLOSE, kernel)
     # image_util.generate_img(image_folder, 'road_morph.png', morph)
-    #
+
     # # TODO threshold怎么计算的？
     # edges = cv.Canny(morph, 100, 200)
     # # edges找出来，但是是锯齿状，会在找轮廓时形成很多点，这里加一道拉普拉斯锐化一下
@@ -105,7 +105,7 @@ def process(image_folder, img_path):
 
 
 def main():
-    image_folder = image_util.img_abs_path('/images/tmp/702b699e-f9a3-465b-a2b0-072662cf4f35')
+    image_folder = image_util.img_abs_path('/images/tmp/f54a6722-519a-473b-bc2b-44cef32a4419')
     img_path = image_folder + '/land_region.png'
 
     land_dict = process(image_folder, img_path)
