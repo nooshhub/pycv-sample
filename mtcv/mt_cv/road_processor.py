@@ -2,6 +2,8 @@ import numpy as np
 import cv2 as cv
 from mt_cv import image_util, test_util
 
+from queue import Queue
+
 
 def find_all_land_contours(src, debug=False):
     """找出所有地块轮廓
@@ -46,6 +48,7 @@ def find_all_land_contours(src, debug=False):
 
     return contours
 
+
 def process(image_folder, img_path):
     """处理图片
 
@@ -58,29 +61,51 @@ def process(image_folder, img_path):
 
     src = cv.imread(img_path)
 
-    # 找出所有地块轮廓
-    land_cnts = find_all_land_contours(src)
+    gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+    thresh = cv.threshold(gray, 254, 255, cv.THRESH_BINARY)[1]
+    image_util.generate_img(image_folder, 'thresh.png', thresh)
 
-    # approx 一下，但是会乱掉
-    appox_land_cnts = []
-    for cnt in land_cnts:
-        epsilon = 0.001 * cv.arcLength(cnt, True)
-        approx_cnt = cv.approxPolyDP(cnt, epsilon, True)
-        appox_land_cnts.append(approx_cnt)
+    thinned = cv.ximgproc.thinning(thresh)
+    image_util.generate_img(image_folder, 'thinned.png', thinned)
 
-    img_with_land_cnt = np.zeros(src.shape[:2], np.uint8)
-    cv.drawContours(img_with_land_cnt, appox_land_cnts, -1, (255, 255, 255), 1)
-    image_util.generate_img(image_folder, 'img_with_land_cnt.png', img_with_land_cnt)
+    # rows, cols = src.shape[:2]
+    # for row in rows:
+    #     for col in cols:
+    #         px_color = thresh[row][col]
+
+    # q = Queue(maxsize=3)
+    # for i in range(6):
+    #     q.put(i)
+    #     print(i)
+    #
+    # print(q.get())
+    # print(q.get())
+    # print(q.get())
+
+    # # 找出所有地块轮廓
+    # land_cnts = find_all_land_contours(src)
+    #
+    # # approx 一下，但是会乱掉
+    # appox_land_cnts = []
+    # for cnt in land_cnts:
+    #     epsilon = 0.01 * cv.arcLength(cnt, True)
+    #     approx_cnt = cv.approxPolyDP(cnt, epsilon, True)
+    #     appox_land_cnts.append(approx_cnt)
+    #
+    # img_with_land_cnt = np.zeros(src.shape[:2], np.uint8)
+    # cv.drawContours(img_with_land_cnt, appox_land_cnts, -1, (255, 255, 255), 1)
+    # cv.fillPoly(img_with_land_cnt, appox_land_cnts, (255, 255, 255))
+    # image_util.generate_img(image_folder, 'img_with_land_cnt.png', img_with_land_cnt)
 
     # houghline目前看起来只能用来帮助我们减少循环次数，使用线的点，而不是所有点
     # hough lines , minLineLength=60, maxLineGap=10
-    lines = cv.HoughLinesP(img_with_land_cnt, cv.HOUGH_PROBABILISTIC, np.pi / 180, 10)
-
-    copy_for_drawn_lines = src.copy()
-    for line in lines:
-        x1, y1, x2, y2 = line[0]
-        cv.line(copy_for_drawn_lines, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    image_util.generate_img(image_folder, 'copy_for_drawn_lines.png', copy_for_drawn_lines)
+    # lines = cv.HoughLinesP(img_with_land_cnt, cv.HOUGH_PROBABILISTIC, np.pi / 180, 10)
+    #
+    # copy_for_drawn_lines = src.copy()
+    # for line in lines:
+    #     x1, y1, x2, y2 = line[0]
+    #     cv.line(copy_for_drawn_lines, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    # image_util.generate_img(image_folder, 'copy_for_drawn_lines.png', copy_for_drawn_lines)
 
     # todo 尝试将轮廓线，或者点进行合并成一条中间的线
 
@@ -105,10 +130,11 @@ def process(image_folder, img_path):
 
 
 def main():
-    image_folder = image_util.img_abs_path('/images/tmp/f54a6722-519a-473b-bc2b-44cef32a4419')
-    img_path = image_folder + '/land_region.png'
+    image_folder = image_util.img_abs_path('/images/tmp/7bf573e0-4ce4-49ee-8e7a-cf5caf525a94')
+    # image_folder = image_util.img_abs_path('/images/tmp/5abf9a33-d9f6-4b77-bd43-94e1d52d57ae')
+    img_path = image_folder + '/hot_cold.png'
 
-    land_dict = process(image_folder, img_path)
+    process(image_folder, img_path)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
