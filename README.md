@@ -373,7 +373,8 @@ docker ps -a
 docker rm -f de74e81dc74f
 docker rm -f mtcv
 
-# 删除之前无用的镜像
+# 删除之前无用的镜像，一般基础layer的不变，不需要每次都删掉装一遍
+# 可以先build，在将没用的none image清掉，利用docker cache加速build
 docker images
 docker rmi -f 50fa88577b3c
 # docker rmi -f mtcv
@@ -388,6 +389,10 @@ docker build -t mtcv .
 docker run -d --name mtcv -p 8001:8000 mtcv
 # 测试用启动
 docker run --rm --name mtcv -p 8001:8000 mtcv
+
+# 服务器宕机，启动服务，启动容器
+sudo service docker start
+docker run -d -p 8001:8000 mtcv
 ```
 
 [docker 参考](https://fastapi.tiangolo.com/zh/deployment/docker/)
