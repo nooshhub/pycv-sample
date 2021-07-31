@@ -35,11 +35,13 @@ def generate(input_data: InputData, debug=False):
         # 获取唯一地块颜色
         random_color = color_util.random_color(random_color_memo)
         # 填充地块
-        cv.fillConvexPoly(img, cnt, random_color)
+        # cv.fillConvexPoly(img, cnt, random_color)
+        cv.fillPoly(img, [cnt], random_color)
         # 绘制轮廓
         cv.drawContours(img_with_contour_only, [cnt], -1, random_color, 2)
         cv.drawContours(img_with_contour, [cnt], -1, random_color, 2)
-        cv.fillConvexPoly(img_with_contour, cnt, random_color)
+        # cv.fillConvexPoly(img_with_contour, cnt, random_color)
+        cv.fillPoly(img_with_contour, [cnt], random_color)
         # 颜色与地块id字典
         color_id = color_util.color_id(random_color)
         color_id_dict[color_id] = land_data.id

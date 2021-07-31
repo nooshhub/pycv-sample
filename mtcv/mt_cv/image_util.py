@@ -40,7 +40,8 @@ def get_roi_by_contour(src, cnt, use_white_bg=True):
 
     # 创建一个黑色背景mask，并根据mask截取ROI
     mask = np.zeros(copy.shape[:2], np.uint8)
-    mask = cv.fillConvexPoly(mask, cnt, (255, 255, 255))
+    # mask = cv.fillConvexPoly(mask, cnt, (255, 255, 255))
+    mask = cv.fillPoly(mask, [cnt], (255, 255, 255))
     roi = cv.bitwise_and(copy, copy, mask=mask)
 
     if not use_white_bg:
