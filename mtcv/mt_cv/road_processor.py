@@ -2,52 +2,6 @@ import numpy as np
 import cv2 as cv
 from mt_cv import image_util, test_util
 
-from queue import Queue
-
-
-def find_all_land_contours(src, debug=False):
-    """找出所有地块轮廓
-
-    Args:
-        src: 输入图片必须是白色背景的图片
-        debug: 调试
-
-    Returns:
-        所有地块轮廓
-    """
-
-    # 去除黑线
-    src[np.where((src < [70, 70, 70]).all(axis=2))] = [255, 255, 255]
-
-    if debug:
-        test_util.show_img('all lands src', src)
-
-    gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
-    if debug:
-        test_util.show_img('all lands gray', gray)
-
-    # 二值化，将不是白色的都变为黑色
-    ret, thresh1 = cv.threshold(gray, 226, 255, cv.THRESH_BINARY_INV)
-
-    # 腐蚀去掉外部的分割线
-    kernel = np.ones((5, 5), np.uint8)
-    # dst = cv.morphologyEx(thresh1, cv.MORPH_OPEN, kernel, iterations=1)
-    dst = cv.erode(thresh1, kernel, iterations=1)
-
-    if debug:
-        test_util.show_img('all lands erode', dst)
-
-    edges = cv.Canny(dst, 100, 200)
-    # edges找出来，但是是锯齿状，会在找轮廓时形成很多点，这里加一道拉普拉斯锐化一下
-    edges = cv.Laplacian(edges, -1, (3, 3))
-
-    if debug:
-        test_util.show_img('all lands edges', edges)
-
-    contours = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[0]
-
-    return contours
-
 
 def process(image_folder, img_path):
     """处理图片
@@ -68,44 +22,15 @@ def process(image_folder, img_path):
     thinned = cv.ximgproc.thinning(thresh)
     image_util.generate_img(image_folder, 'thinned.png', thinned)
 
-    # rows, cols = src.shape[:2]
-    # for row in rows:
-    #     for col in cols:
-    #         px_color = thresh[row][col]
-
-    # q = Queue(maxsize=3)
-    # for i in range(6):
-    #     q.put(i)
-    #     print(i)
-    #
-    # print(q.get())
-    # print(q.get())
-    # print(q.get())
-
-    # # 找出所有地块轮廓
-    # land_cnts = find_all_land_contours(src)
-    #
-    # # approx 一下，但是会乱掉
-    # appox_land_cnts = []
-    # for cnt in land_cnts:
-    #     epsilon = 0.01 * cv.arcLength(cnt, True)
-    #     approx_cnt = cv.approxPolyDP(cnt, epsilon, True)
-    #     appox_land_cnts.append(approx_cnt)
-    #
-    # img_with_land_cnt = np.zeros(src.shape[:2], np.uint8)
-    # cv.drawContours(img_with_land_cnt, appox_land_cnts, -1, (255, 255, 255), 1)
-    # cv.fillPoly(img_with_land_cnt, appox_land_cnts, (255, 255, 255))
-    # image_util.generate_img(image_folder, 'img_with_land_cnt.png', img_with_land_cnt)
-
     # houghline目前看起来只能用来帮助我们减少循环次数，使用线的点，而不是所有点
     # hough lines , minLineLength=60, maxLineGap=10
-    # lines = cv.HoughLinesP(img_with_land_cnt, cv.HOUGH_PROBABILISTIC, np.pi / 180, 10)
-    #
-    # copy_for_drawn_lines = src.copy()
-    # for line in lines:
-    #     x1, y1, x2, y2 = line[0]
-    #     cv.line(copy_for_drawn_lines, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    # image_util.generate_img(image_folder, 'copy_for_drawn_lines.png', copy_for_drawn_lines)
+    lines = cv.HoughLinesP(thinned, cv.HOUGH_PROBABILISTIC, np.pi / 180, 100)
+
+    copy_for_drawn_lines = src.copy()
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        cv.line(copy_for_drawn_lines, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    image_util.generate_img(image_folder, 'copy_for_drawn_lines.png', copy_for_drawn_lines)
 
     # todo 尝试将轮廓线，或者点进行合并成一条中间的线
 
@@ -130,8 +55,8 @@ def process(image_folder, img_path):
 
 
 def main():
-    image_folder = image_util.img_abs_path('/images/tmp/7bf573e0-4ce4-49ee-8e7a-cf5caf525a94')
-    # image_folder = image_util.img_abs_path('/images/tmp/5abf9a33-d9f6-4b77-bd43-94e1d52d57ae')
+    # image_folder = image_util.img_abs_path('/images/tmp/7bf573e0-4ce4-49ee-8e7a-cf5caf525a94')
+    image_folder = image_util.img_abs_path('/images/tmp/5abf9a33-d9f6-4b77-bd43-94e1d52d57ae')
     img_path = image_folder + '/hot_cold.png'
 
     process(image_folder, img_path)
